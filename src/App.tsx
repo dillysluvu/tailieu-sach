@@ -70,26 +70,15 @@ export default function App() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-32 pt-5 sm:px-8 sm:pt-7 md:max-w-3xl md:pb-12">
       <header className="sticky top-0 z-20 -mx-4 flex items-center justify-between border-b border-line/70 bg-bg/80 px-4 py-3 backdrop-blur-xl sm:-mx-8 sm:px-8">
-        <div className="flex items-center gap-2.5">
-          <span aria-hidden="true" className="relative inline-block h-4 w-4 rounded-[5px] bg-text">
-            <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-accent" />
-          </span>
-          <span className="text-[15px] font-semibold tracking-[-0.03em] text-text">sạch.</span>
-        </div>
+        <span aria-hidden="true" className="relative inline-block h-4 w-4 rounded-[5px] bg-text">
+          <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-accent" />
+        </span>
         <ThemeToggle preference={preference} onCycle={cycle} />
       </header>
 
-      <section className="mt-8 sm:mt-10">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-faint">Tiện ích tài liệu</p>
-        <h1 className="mt-2 max-w-xl text-[26px] font-semibold leading-[1.15] tracking-[-0.04em] text-text sm:text-[34px]">
-          Cắt &amp; gộp PDF, Word sang PDF — gọn trong một trang.
-        </h1>
-        <p className="mt-2.5 max-w-lg text-[13px] leading-relaxed text-muted">
-          Kéo file vào, chọn khoảng trang rồi tải về.
-        </p>
-      </section>
+      <h1 className="sr-only">Cắt &amp; gộp PDF, Word sang PDF</h1>
 
-      <div className="mt-8 sm:mt-9">
+      <div className="mt-6 sm:mt-7">
         <Tabs active={tab} onChange={setTab} />
       </div>
 
