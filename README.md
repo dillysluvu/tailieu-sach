@@ -1,4 +1,4 @@
-# file — Document Workspace
+# PDF
 
 Cắt & gộp PDF, chuyển Word (`.docx`) và ảnh (JPG/PNG) sang PDF. **Mọi thứ đều xử lý trên trình duyệt** — file không được upload, không có máy chủ, không quảng cáo.
 
@@ -34,7 +34,7 @@ Cắt & gộp PDF, chuyển Word (`.docx`) và ảnh (JPG/PNG) sang PDF. **Mọi
 - Desktop: bố cục căn giữa, full-window drag overlay, phím tắt `⌘ / Ctrl + Enter` để xuất.
 - Motion nhẹ với `motion` (tải feature theo yêu cầu, tôn trọng `prefers-reduced-motion`).
 - Preview PDF đầu ra mở trong modal, lật trang và đóng bằng `Esc`.
-- Title `file — Document Workspace`; ảnh chia sẻ `public/og-image.png` (OG/Twitter card).
+- Title `PDF`; ảnh chia sẻ `public/og-image.png` (OG/Twitter card).
 
 Kéo sai định dạng sẽ tự động chuyển sang tab phù hợp.
 

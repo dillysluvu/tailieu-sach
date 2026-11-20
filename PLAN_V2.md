@@ -304,9 +304,9 @@ Kế hoạch và preview đã được duyệt. Để bắt đầu viết code, 
 - Vercel Git connect (native) không hoàn tất: Vercel GitHub App chưa được cài cho account `dillysluvu` (`/v1/integrations/integrations` trả `[]`). Đã dùng fallback GitHub Actions với secrets `VERCEL_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID`; workflow chạy thành công trên push `main` (deploy production) và sẵn sàng comment preview cho PR. Muốn chuyển sang native: cài GitHub App rồi connect tại `https://vercel.com/dillysluvus-projects/pdf/settings/git`, sau đó xóa 2 job deploy trong `ci.yml`.
 - `vercel.json` đã verify: `/assets/*` trả `Cache-Control: public, max-age=31536000, immutable` kèm các security headers; live URL vẫn `https://sachpdf.vercel.app` (HTTP 200).
 
-- **Bổ sung sau duyệt plan:** giới hạn input nâng lên **500 MB/file · 100 file/lần kéo · 10000 trang output**, chip dropzone và thông báo lỗi dùng chung `LIMITS`. Title/og:title là `file — Document Workspace` (không liệt kê chức năng). Tab `PDF → Word` từng được thử nghiệm nhưng đã **bỏ theo yêu cầu**.
+- **Bổ sung sau duyệt plan:** giới hạn input nâng lên **500 MB/file · 100 file/lần kéo · 10000 trang output**, chip dropzone và thông báo lỗi dùng chung `LIMITS`. Title/og:title là `PDF` (không liệt kê chức năng). Tab `PDF → Word` từng được thử nghiệm nhưng đã **bỏ theo yêu cầu**.
 
-- **Chốt phương án cải thiện (đã triển khai):** title `file — Document Workspace`; preview PDF đầu ra cho cả tab Gộp PDF và Word → PDF (`pdf.js` render canvas, lật trang, `Esc` đóng, tải lại từ modal). Các tab mới (Ảnh → PDF, tách ZIP, PWA) và OCR vẫn là việc sau.
+- **Chốt phương án cải thiện (đã triển khai):** title `PDF`; preview PDF đầu ra cho cả tab Gộp PDF và Word → PDF (`pdf.js` render canvas, lật trang, `Esc` đóng, tải lại từ modal). Các tab mới (Ảnh → PDF, tách ZIP, PWA) và OCR vẫn là việc sau.
 
 - **Vòng phát triển tiếp (đã triển khai):** tab `Ảnh → PDF` (`pdf-lib embedJpg/embedPng`, mỗi ảnh một trang A4, sắp xếp/xoá); tuỳ chọn xuất dùng chung **tên file + preset Tất cả/Lẻ/Chẵn/Cuối**; preview nạp trang theo `IntersectionObserver`, giải phóng canvas khi rời màn hình và cache bytes theo chữ ký; E2E Playwright được đưa vào `tests/e2e.mjs` và chạy trong CI trước khi deploy.
 

@@ -51,7 +51,7 @@ try {
   page.on('pageerror', (error) => pageErrors.push(error.message))
   await page.goto(BASE, { waitUntil: 'networkidle' })
 
-  check('title', (await page.title()).includes('file — Document Workspace'))
+  check('title', (await page.title()).includes('PDF'))
   check('og image', (await page.locator('meta[property="og:image"]').getAttribute('content')).includes('og-image.png'))
   check('tab count', (await page.getByRole('tab').count()) === 3)
   check('higher limit chip', await page.getByText('500 MB').first().isVisible())

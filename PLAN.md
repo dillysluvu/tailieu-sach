@@ -131,7 +131,7 @@ Một khung duy nhất ở giữa, `accept` động: Tab 1 = `.pdf,application/p
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  file — Document Workspace  🔒 Xử lý trên trình duyệt     │  ← header 56px
+│  PDF                        🔒 Xử lý trên trình duyệt     │  ← header 56px
 ├─────────────────────────────────────────────────────────┤
 │  [ Cắt & Gộp PDF ]  [ Word → PDF ]                      │  ← tab underline 2px
 ├─────────────────────────────────────────────────────────┤
