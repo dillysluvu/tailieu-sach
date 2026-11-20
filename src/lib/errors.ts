@@ -1,7 +1,7 @@
 export const LIMITS = {
-  maxFileBytes: 200 * 1024 * 1024,
-  maxFilesPerDrop: 50,
-  maxOutputPages: 5000,
+  maxFileBytes: 500 * 1024 * 1024,
+  maxFilesPerDrop: 100,
+  maxOutputPages: 10000,
 } as const
 
 export const fileSizeLabel = `${LIMITS.maxFileBytes / 1024 / 1024} MB`

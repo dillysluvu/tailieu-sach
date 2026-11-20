@@ -1,4 +1,4 @@
-# sạch.
+# file.
 
 Cắt & gộp PDF, chuyển Word sang PDF và trích văn bản PDF sang Word. **Mọi thứ đều xử lý trên trình duyệt** — file không được upload, không có máy chủ, không quảng cáo.
 
@@ -39,7 +39,8 @@ npm run preview
 
 ## Giới hạn
 
-- Tối đa 200 MB/file, 50 file mỗi lần kéo, 5000 trang output.
+- Tối đa **500 MB/file**, **100 file mỗi lần kéo**, **10.000 trang output**.
+- Với file rất lớn, tốc độ và bộ nhớ phụ thuộc vào thiết bị — nên đóng bớt tab và xử lý từng đợt nếu máy yếu.
 - PDF được mã hóa cần mở khóa trước.
 - `.docx` không có khái niệm trang cố định; số trang được tính theo bản PDF A4 sau chuyển đổi. Mammoth giữ tốt văn bản, tiêu đề, danh sách và ảnh cơ bản; layout phức tạp (cột, header/footer, text box) có thể không giữ nguyên.
 
