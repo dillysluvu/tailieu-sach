@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, m, useReducedMotion } from 'motion/react'
 import { DragOverlay } from './components/DragOverlay'
 import { PdfMergerPanel } from './components/PdfMergerPanel'
-import { PdfToWordPanel } from './components/PdfToWordPanel'
 import { Tabs } from './components/Tabs'
 import { ThemeToggle } from './components/ThemeToggle'
 import { WordPanel } from './components/WordPanel'
@@ -46,10 +45,9 @@ export default function App() {
     }
 
     if (pdfs.length && !docs.length) {
-      const target: TabKey = tab === 'word' ? 'pdftoword' : tab
-      if (target !== tab) {
-        setTab(target)
-        setNotice('Đã chuyển sang tab PDF → Word')
+      if (tab !== 'pdf') {
+        setTab('pdf')
+        setNotice('Đã chuyển sang tab Cắt & Gộp PDF')
       } else {
         setNotice('')
       }
@@ -105,19 +103,6 @@ export default function App() {
         </div>
         <div id="panel-word" role="tabpanel" aria-labelledby="tab-word" className={tab === 'word' ? '' : 'hidden'}>
           <WordPanel incoming={incoming} onFiles={handleFiles} active={tab === 'word'} exportRef={exportRef} />
-        </div>
-        <div
-          id="panel-pdftoword"
-          role="tabpanel"
-          aria-labelledby="tab-pdftoword"
-          className={tab === 'pdftoword' ? '' : 'hidden'}
-        >
-          <PdfToWordPanel
-            incoming={incoming}
-            onFiles={handleFiles}
-            active={tab === 'pdftoword'}
-            exportRef={exportRef}
-          />
         </div>
       </div>
 

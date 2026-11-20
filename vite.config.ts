@@ -19,7 +19,7 @@ export default defineConfig({
             },
             {
               name: 'convert-vendor',
-              test: /node_modules[\\/](pdfjs-dist|docx)[\\/]/,
+              test: /node_modules[\\/]pdfjs-dist[\\/]/,
               priority: 2,
             },
           ],
