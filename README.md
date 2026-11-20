@@ -50,6 +50,7 @@ Xem bản thiết kế V2: [`docs/preview-v2.html`](docs/preview-v2.html) và [`
 - Push `main` → tự deploy production; PR → tự deploy preview và comment URL vào PR.
 - secrets cần thiết: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
 - Nếu sau này bật native Git integration trong Vercel Dashboard, xóa job `deploy-production` / `deploy-preview` để tránh deploy trùng.
+- Native Git connect hiện chưa bật vì Vercel GitHub App chưa được cài cho tài khoản; vào `https://vercel.com/dillysluvus-projects/pdf/settings/git` để connect nếu muốn.
 
 ## Links
 
