@@ -55,4 +55,4 @@ Xem bản thiết kế V2: [`docs/preview-v2.html`](docs/preview-v2.html) và [`
 ## Links
 
 - Repository: https://github.com/dillysluvu/tailieu-sach
-- Live: https://pdf-lac-chi.vercel.app
+- Live: https://tailieu-sach.vercel.app

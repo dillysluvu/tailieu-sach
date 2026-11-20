@@ -244,9 +244,9 @@ Monochrome làm nền, **một accent duy nhất** dùng có chừng mực (focu
    - `npx vercel link` → chọn project hiện tại (`pdf`) → `npx vercel git connect https://github.com/dillysluvu/tailieu-sach --yes`.
    - Kiểm tra: `npx vercel project ls`, Settings → Git hiện repo; `git push` thử một commit → dashboard xuất hiện deployment mới.
    - Nếu vẫn lỗi: fallback = import lại repo thành project mới `tailieu-sach` trên dashboard (đổi live URL, cần cập nhật README) **hoặc** GitHub Actions dùng secret `VERCEL_TOKEN` + `vercel --prod --yes`.
-2. **Giữ live URL hiện tại** `https://pdf-lac-chi.vercel.app`; tuỳ chọn đổi tên project hiển thị thành `tailieu-sach` trong dashboard (không đổi domain).
+2. **Đổi tên project thành `tailieu-sach`** và thêm domain `https://tailieu-sach.vercel.app`; domain cũ `pdf-lac-chi.vercel.app` vẫn giữ để tương thích.
 3. **Preview deploy:** sau khi Git connected, mở branch phụ → PR → Vercel tự tạo Preview URL + comment. Nếu muốn public preview, tắt Deployment Protection cho Preview (hiện production đang `vercel_authentication` nhưng curl vẫn 200 — cần verify lại sau khi đổi config).
-4. **vercel.json:** commit file ở 2.21 → push → verify `curl -I https://pdf-lac-chi.vercel.app/assets/<chunk>.js` trả `Cache-Control: immutable`; verify rewrite `/some-route` vẫn trả HTML 200.
+4. **vercel.json:** commit file ở 2.21 → push → verify `curl -I https://tailieu-sach.vercel.app/assets/<chunk>.js` trả `Cache-Control: immutable`; verify rewrite `/some-route` vẫn trả HTML 200.
 5. **Git workflow:** commit `.gitignore` + `ci.yml` + script `check`; mọi thay đổi chạy `npm run check` trước push (CI cũng chạy lại). Không dùng hook bắt buộc để tránh cản workflow; nếu muốn, thêm `.githooks/pre-push` và `git config core.hooksPath .githooks`.
 
 ---
@@ -279,7 +279,7 @@ Monochrome làm nền, **một accent duy nhất** dùng có chừng mực (focu
 |---|---|
 | Accent | **Indigo `#5E6AD2`** (dark `#8B94E8`) |
 | Theme | **Theo hệ thống + 3 trạng thái** System / Light / Dark, nhớ localStorage, chống FOUC |
-| Vercel | **Giữ project `pdf`** và live URL `https://pdf-lac-chi.vercel.app` |
+| Vercel | **Đổi project thành `tailieu-sach`**, live URL `https://tailieu-sach.vercel.app` (domain cũ vẫn hoạt động) |
 | CI | **`npm run check` + GitHub Actions**, không pre-push hook |
 | Motion | **`motion` / framer-motion** (LazyMotion + async domAnimation, `m`, `AnimatePresence`, `layout`) |
 | Preview file | Giữ tại plan để duyệt; sau khi implement copy vào `docs/preview-v2.html` nếu bạn muốn lưu trong repo |
@@ -302,4 +302,4 @@ Kế hoạch và preview đã được duyệt. Để bắt đầu viết code, 
 - CSP enforce không bật (html2pdf tạo iframe/CSS inline) — chỉ dùng các security headers cơ bản trong `vercel.json`.
 
 - Vercel Git connect (native) không hoàn tất: Vercel GitHub App chưa được cài cho account `dillysluvu` (`/v1/integrations/integrations` trả `[]`). Đã dùng fallback GitHub Actions với secrets `VERCEL_TOKEN` / `VERCEL_ORG_ID` / `VERCEL_PROJECT_ID`; workflow chạy thành công trên push `main` (deploy production) và sẵn sàng comment preview cho PR. Muốn chuyển sang native: cài GitHub App rồi connect tại `https://vercel.com/dillysluvus-projects/pdf/settings/git`, sau đó xóa 2 job deploy trong `ci.yml`.
-- `vercel.json` đã verify: `/assets/*` trả `Cache-Control: public, max-age=31536000, immutable` kèm các security headers; live URL vẫn `https://pdf-lac-chi.vercel.app` (HTTP 200).
+- `vercel.json` đã verify: `/assets/*` trả `Cache-Control: public, max-age=31536000, immutable` kèm các security headers; live URL vẫn `https://tailieu-sach.vercel.app` (HTTP 200).
