@@ -38,4 +38,4 @@ Vite + React 19 + TypeScript + Tailwind CSS v4. Các thư viện nặng (`pdf-li
 ## Links
 
 - Repository: https://github.com/dillysluvu/tailieu-sach
-- Live: đang cập nhật sau khi deploy.
+- Live: https://pdf-lac-chi.vercel.app
