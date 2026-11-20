@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, m, useReducedMotion } from 'motion/react'
 import { DragOverlay } from './components/DragOverlay'
+import { ImageToPdfPanel } from './components/ImageToPdfPanel'
 import { PdfMergerPanel } from './components/PdfMergerPanel'
 import { Tabs } from './components/Tabs'
 import { ThemeToggle } from './components/ThemeToggle'
@@ -8,7 +9,7 @@ import { WordPanel } from './components/WordPanel'
 import { useExportShortcut, type ExportRef } from './hooks/useExportShortcut'
 import { useGlobalDrag } from './hooks/useGlobalDrag'
 import { useTheme } from './hooks/useTheme'
-import { isDocxFile, isPdfFile } from './lib/errors'
+import { isDocxFile, isImageFile, isPdfFile } from './lib/errors'
 import type { IncomingFiles, TabKey } from './types'
 
 export default function App() {
@@ -32,6 +33,25 @@ export default function App() {
     if (!files.length) return
     const pdfs = files.filter(isPdfFile)
     const docs = files.filter(isDocxFile)
+    const images = files.filter(isImageFile)
+
+    if (images.length && (pdfs.length || docs.length)) {
+      setTab('image')
+      setNotice('Đã bỏ qua file PDF/Word — kéo riêng từng loại')
+      setIncoming({ files: images, token: ++sequence.current })
+      return
+    }
+
+    if (images.length) {
+      if (tab !== 'image') {
+        setTab('image')
+        setNotice('Đã chuyển sang tab Ảnh → PDF')
+      } else {
+        setNotice('')
+      }
+      setIncoming({ files: images, token: ++sequence.current })
+      return
+    }
 
     if (docs.length && !pdfs.length) {
       if (tab !== 'word') {
@@ -76,7 +96,7 @@ export default function App() {
         <ThemeToggle preference={preference} onCycle={cycle} />
       </header>
 
-      <h1 className="sr-only">Cắt &amp; gộp PDF, Word sang PDF</h1>
+      <h1 className="sr-only">Cắt &amp; gộp PDF, Word sang PDF, ảnh sang PDF</h1>
 
       <div className="mt-6 sm:mt-7">
         <Tabs active={tab} onChange={setTab} />
@@ -103,6 +123,9 @@ export default function App() {
         </div>
         <div id="panel-word" role="tabpanel" aria-labelledby="tab-word" className={tab === 'word' ? '' : 'hidden'}>
           <WordPanel incoming={incoming} onFiles={handleFiles} active={tab === 'word'} exportRef={exportRef} />
+        </div>
+        <div id="panel-image" role="tabpanel" aria-labelledby="tab-image" className={tab === 'image' ? '' : 'hidden'}>
+          <ImageToPdfPanel incoming={incoming} onFiles={handleFiles} active={tab === 'image'} exportRef={exportRef} />
         </div>
       </div>
 

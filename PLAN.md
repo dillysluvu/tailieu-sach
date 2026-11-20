@@ -208,3 +208,8 @@ Rủi ro còn lại đã được xử lý trong thiết kế: `.docx` không c�
 ### Bàn giao triển khai
 
 Kế hoạch đã duyệt. Để bắt đầu viết code, hãy **chuyển sang agent triển khai (Implementation/Builder)** — Plan Mode hiện tại chỉ cho phép ghi file vào `/home/uyvu/.opencode/plan/`. Agent đó sẽ: copy file này thành `PLAN.md` ở gốc repo → scaffold → implement 2 tab → test → `gh repo create --public --push` → deploy Vercel.
+
+---
+
+**Cập nhật sau khi duyệt plan:** thêm tab `Ảnh → PDF`; tuỳ chọn xuất tên file + preset trang dùng chung; preview PDF render từng trang theo `IntersectionObserver`; E2E Playwright nằm trong repo/CI. Giới hạn hiện tại **500 MB/file · 100 file/lần · 10.000 trang**.
+

@@ -28,10 +28,17 @@ export async function mergeRows(rows: PdfRow[], cache: Map<string, PDFDocument>)
 }
 
 export async function extractRange(bytes: Uint8Array, from: number, to: number): Promise<Uint8Array> {
+  return extractPages(bytes, pageIndices(from, to))
+}
+
+export async function extractPages(bytes: Uint8Array, pages: number[]): Promise<Uint8Array> {
   const { PDFDocument } = await import('pdf-lib')
   const source = await PDFDocument.load(bytes)
   const output = await PDFDocument.create()
-  const copied = await output.copyPages(source, pageIndices(from, to))
+  const copied = await output.copyPages(
+    source,
+    pages.map((page) => page - 1),
+  )
   copied.forEach((page) => output.addPage(page))
   return output.save()
 }

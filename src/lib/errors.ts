@@ -21,6 +21,10 @@ export function isDocxFile(file: File): boolean {
   )
 }
 
+export function isImageFile(file: File): boolean {
+  return file.type === 'image/jpeg' || file.type === 'image/png' || /\.(jpe?g|png)$/i.test(file.name)
+}
+
 export function friendlyError(error: unknown): string {
   if (!(error instanceof Error)) return 'Có lỗi xảy ra. Vui lòng thử lại.'
   const message = error.message.toLowerCase()

@@ -1,4 +1,4 @@
-export type TabKey = 'pdf' | 'word'
+export type TabKey = 'pdf' | 'word' | 'image'
 
 export type TaskStatus = 'idle' | 'running' | 'done' | 'error'
 

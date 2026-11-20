@@ -308,3 +308,5 @@ Kế hoạch và preview đã được duyệt. Để bắt đầu viết code, 
 
 - **Chốt phương án cải thiện (đã triển khai):** title `file — Document Workspace`; preview PDF đầu ra cho cả tab Gộp PDF và Word → PDF (`pdf.js` render canvas, lật trang, `Esc` đóng, tải lại từ modal). Các tab mới (Ảnh → PDF, tách ZIP, PWA) và OCR vẫn là việc sau.
 
+- **Vòng phát triển tiếp (đã triển khai):** tab `Ảnh → PDF` (`pdf-lib embedJpg/embedPng`, mỗi ảnh một trang A4, sắp xếp/xoá); tuỳ chọn xuất dùng chung **tên file + preset Tất cả/Lẻ/Chẵn/Cuối**; preview nạp trang theo `IntersectionObserver`, giải phóng canvas khi rời màn hình và cache bytes theo chữ ký; E2E Playwright được đưa vào `tests/e2e.mjs` và chạy trong CI trước khi deploy.
+

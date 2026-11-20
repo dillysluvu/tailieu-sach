@@ -3,10 +3,13 @@ import { useAsyncTask } from '../hooks/useAsyncTask'
 import type { ExportRef } from '../hooks/useExportShortcut'
 import { downloadBytes } from '../lib/download'
 import { isDocxFile, LIMITS, sizeError } from '../lib/errors'
+import { filterPages, outputName, type PagePreset } from '../lib/exportOptions'
+import { extractPages } from '../lib/pdf'
 import { rangeIssue } from '../lib/parse'
-import { convertDocxToPdf, cropWordPdf } from '../lib/word'
+import { convertDocxToPdf } from '../lib/word'
 import type { IncomingFiles } from '../types'
 import { Dropzone } from './Dropzone'
+import { ExportOptions } from './ExportOptions'
 import { PdfPreviewModal } from './PdfPreviewModal'
 import { RangeInputs } from './RangeInputs'
 import { StickyActionBar } from './StickyActionBar'
@@ -25,8 +28,12 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
   const [pageCount, setPageCount] = useState(0)
   const [from, setFrom] = useState(1)
   const [to, setTo] = useState(1)
+  const [filename, setFilename] = useState('')
+  const [preset, setPreset] = useState<PagePreset>('all')
+  const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const lastToken = useRef(0)
+  const outputCache = useRef<{ key: string; source: Uint8Array; bytes: Uint8Array } | null>(null)
   const { status, message, run, reset } = useAsyncTask()
 
   const acceptFiles = useCallback(async (files: File[]) => {
@@ -40,6 +47,9 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
     setPageCount(converted.pageCount)
     setFrom(1)
     setTo(converted.pageCount)
+    setPreviewBytes(null)
+    setPreviewOpen(false)
+    outputCache.current = null
   }, [])
 
   useEffect(() => {
@@ -51,14 +61,35 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
 
   const issue = bytes ? rangeIssue(from, to, pageCount) : null
   const busy = status === 'running'
+  const rangePages = issue || !pageCount ? [] : Array.from({ length: to - from + 1 }, (_, index) => from + index)
+  const selectedPages = filterPages(rangePages, preset)
+  const signature = `${bytes?.byteLength ?? 0}:${from}:${to}:${preset}`
+  const name = outputName(filename, file?.name.replace(/\.docx$/i, '') ?? 'ket-qua')
+
+  const buildOutput = useCallback(async () => {
+    if (!bytes) throw new Error('Hãy kéo file Word trước.')
+    if (issue) throw new Error(issue)
+    const cached = outputCache.current
+    if (cached && cached.key === signature && cached.source === bytes) return cached.bytes
+    const full = preset === 'all' && from === 1 && to === pageCount
+    const output = full ? bytes : await extractPages(bytes, selectedPages)
+    outputCache.current = { key: signature, source: bytes, bytes: output }
+    return output
+  }, [bytes, from, issue, pageCount, preset, selectedPages, signature, to])
 
   const handleDownload = useCallback(() => {
-    if (!file || !bytes) return
     void run(async () => {
-      const output = from === 1 && to === pageCount ? bytes : await cropWordPdf(bytes, from, to)
-      downloadBytes(output, `${file.name.replace(/\.docx$/i, '')}.pdf`)
+      const output = await buildOutput()
+      downloadBytes(output, name)
     }, 'Đã tải file PDF.')
-  }, [bytes, file, from, pageCount, run, to])
+  }, [buildOutput, name, run])
+
+  const handlePreview = useCallback(() => {
+    void run(async () => {
+      setPreviewBytes(await buildOutput())
+      setPreviewOpen(true)
+    }, 'Đã dựng xong bản xem trước.')
+  }, [buildOutput, run])
 
   useEffect(() => {
     if (!active) return
@@ -75,7 +106,9 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
     setPageCount(0)
     setFrom(1)
     setTo(1)
+    setPreviewBytes(null)
     setPreviewOpen(false)
+    outputCache.current = null
   }
 
   return (
@@ -132,15 +165,17 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
             Số trang được tính theo bản PDF A4 sau chuyển đổi — .docx không có trang cố định.
           </p>
 
+          <ExportOptions filename={filename} onFilename={setFilename} preset={preset} onPreset={setPreset} />
+
           <StickyActionBar
             busy={busy}
-            disabled={!!issue}
+            disabled={!!issue || selectedPages.length === 0}
             label="Tải PDF"
             onAction={handleDownload}
-            secondary={{ label: 'Xem trước', onClick: () => setPreviewOpen(true) }}
+            secondary={{ label: 'Xem trước', onClick: handlePreview }}
             summary={
               <>
-                Giữ <span className="font-semibold text-text">{Math.max(0, to - from + 1)}</span> / {pageCount} trang
+                Giữ <span className="font-semibold text-text">{selectedPages.length}</span> / {pageCount} trang
               </>
             }
           />
@@ -149,7 +184,7 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
 
       <PdfPreviewModal
         open={previewOpen}
-        bytes={bytes}
+        bytes={previewBytes}
         title="Xem trước PDF từ Word"
         onClose={() => setPreviewOpen(false)}
       />

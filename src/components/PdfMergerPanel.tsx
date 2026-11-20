@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence } from 'motion/react'
 import { useAsyncTask } from '../hooks/useAsyncTask'
 import type { ExportRef } from '../hooks/useExportShortcut'
 import { usePdfRows } from '../hooks/usePdfRows'
 import { downloadBytes } from '../lib/download'
 import { LIMITS } from '../lib/errors'
+import { applyPresetToRows, outputName, type PagePreset } from '../lib/exportOptions'
 import { mergeRows } from '../lib/pdf'
 import { rangeIssue, totalPages } from '../lib/parse'
 import type { IncomingFiles } from '../types'
 import { Dropzone } from './Dropzone'
+import { ExportOptions } from './ExportOptions'
 import { PdfPreviewModal } from './PdfPreviewModal'
 import { PdfRowItem } from './PdfRowItem'
 import { StickyActionBar } from './StickyActionBar'
@@ -28,8 +30,11 @@ export function PdfMergerPanel({ incoming, onFiles, active, exportRef }: Props) 
   const [announcement, setAnnouncement] = useState('')
   const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [filename, setFilename] = useState('')
+  const [preset, setPreset] = useState<PagePreset>('all')
   const extraInput = useRef<HTMLInputElement>(null)
   const lastToken = useRef(0)
+  const outputCache = useRef<{ key: string; bytes: Uint8Array } | null>(null)
 
   useEffect(() => {
     if (incoming.token > lastToken.current && incoming.files.length) {
@@ -39,30 +44,42 @@ export function PdfMergerPanel({ incoming, onFiles, active, exportRef }: Props) 
   }, [incoming, addFiles, run])
 
   const invalid = rows.some((row) => rangeIssue(row.from, row.to, row.pageCount) !== null)
-  const total = totalPages(rows)
+  const outputRows = useMemo(() => applyPresetToRows(rows, preset), [rows, preset])
+  const total = totalPages(outputRows)
   const sourceCount = new Set(rows.map((row) => row.fileId)).size
   const tooMany = total > LIMITS.maxOutputPages
+  const signature = outputRows.map((row) => `${row.id}@${row.from}-${row.to}`).join('|')
+  const name = outputName(filename, 'ket-qua')
+
+  const buildOutput = useCallback(async () => {
+    if (outputCache.current?.key === signature) return outputCache.current.bytes
+    const bytes = await mergeRows(outputRows, getCache())
+    outputCache.current = { key: signature, bytes }
+    return bytes
+  }, [getCache, outputRows, signature])
+
+  const validate = useCallback(() => {
+    if (!rows.length) throw new Error('Hãy kéo ít nhất một file PDF.')
+    if (invalid) throw new Error('Hãy sửa các khoảng trang trước khi xuất.')
+    if (tooMany) throw new Error(`Tối đa ${LIMITS.maxOutputPages} trang mỗi lần xuất.`)
+  }, [invalid, rows.length, tooMany])
 
   const handleExport = useCallback(() => {
     void run(async () => {
-      if (!rows.length) throw new Error('Hãy kéo ít nhất một file PDF.')
-      if (invalid) throw new Error('Hãy sửa các khoảng trang trước khi xuất.')
-      if (tooMany) throw new Error(`Tối đa ${LIMITS.maxOutputPages} trang mỗi lần xuất.`)
-      const bytes = await mergeRows(rows, getCache())
-      downloadBytes(bytes, 'ket-qua.pdf')
+      validate()
+      const bytes = await buildOutput()
+      downloadBytes(bytes, name)
     }, `Đã xuất ${total} trang.`)
-  }, [getCache, invalid, rows, run, tooMany, total])
+  }, [buildOutput, name, run, total, validate])
 
   const handlePreview = useCallback(() => {
     void run(async () => {
-      if (!rows.length) throw new Error('Hãy kéo ít nhất một file PDF.')
-      if (invalid) throw new Error('Hãy sửa các khoảng trang trước khi xem.')
-      if (tooMany) throw new Error(`Tối đa ${LIMITS.maxOutputPages} trang mỗi lần xuất.`)
-      const bytes = await mergeRows(rows, getCache())
+      validate()
+      const bytes = await buildOutput()
       setPreviewBytes(bytes)
       setPreviewOpen(true)
     }, 'Đã dựng xong bản xem trước.')
-  }, [getCache, invalid, rows, run, tooMany])
+  }, [buildOutput, run, validate])
 
   useEffect(() => {
     if (!active) return
@@ -153,6 +170,8 @@ export function PdfMergerPanel({ incoming, onFiles, active, exportRef }: Props) 
             )}
           </ul>
 
+          <ExportOptions filename={filename} onFilename={setFilename} preset={preset} onPreset={setPreset} />
+
           <StickyActionBar
             busy={status === 'running'}
             disabled={invalid || tooMany}
@@ -182,7 +201,7 @@ export function PdfMergerPanel({ incoming, onFiles, active, exportRef }: Props) 
         title="Xem trước bản gộp"
         onClose={() => setPreviewOpen(false)}
         onDownload={() => {
-          if (previewBytes) downloadBytes(previewBytes, 'ket-qua.pdf')
+          if (previewBytes) downloadBytes(previewBytes, name)
           setPreviewOpen(false)
         }}
       />
