@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { m, useReducedMotion } from 'motion/react'
+import { fileSizeLabel, LIMITS } from '../lib/errors'
 
 type Props = {
   accept: string
@@ -14,7 +15,9 @@ export function Dropzone({ accept, multiple, title, hint, onFiles, busy = false 
   const input = useRef<HTMLInputElement>(null)
   const [over, setOver] = useState(false)
   const reduce = useReducedMotion()
-  const chips = accept.includes('pdf') ? ['PDF', '25 MB', '20 file / lần'] : ['DOCX', '25 MB']
+  const chips = accept.includes('pdf')
+    ? ['PDF', fileSizeLabel, `${LIMITS.maxFilesPerDrop} file / lần`]
+    : ['DOCX', fileSizeLabel]
 
   return (
     <m.div

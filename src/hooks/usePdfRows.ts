@@ -1,6 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import type { PDFDocument } from 'pdf-lib'
-import { isPdfFile, LIMITS } from '../lib/errors'
+import { isPdfFile, LIMITS, sizeError } from '../lib/errors'
 import { loadPdf } from '../lib/pdf'
 import type { PdfRow } from '../types'
 
@@ -17,7 +17,7 @@ export function usePdfRows() {
       throw new Error(`Tối đa ${LIMITS.maxFilesPerDrop} file mỗi lần.`)
     }
     const oversized = pdfs.find((file) => file.size > LIMITS.maxFileBytes)
-    if (oversized) throw new Error(`"${oversized.name}" vượt quá 25 MB.`)
+    if (oversized) throw new Error(sizeError(oversized))
 
     setLoading(true)
     try {

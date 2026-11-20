@@ -17,6 +17,11 @@ export default defineConfig({
               test: /node_modules[\\/](mammoth|html2pdf\.js|jspdf|html2canvas|dompurify)[\\/]/,
               priority: 2,
             },
+            {
+              name: 'convert-vendor',
+              test: /node_modules[\\/](pdfjs-dist|docx)[\\/]/,
+              priority: 2,
+            },
           ],
         },
       },

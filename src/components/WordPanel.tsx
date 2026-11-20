@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAsyncTask } from '../hooks/useAsyncTask'
 import type { ExportRef } from '../hooks/useExportShortcut'
 import { downloadBytes } from '../lib/download'
-import { isDocxFile, LIMITS } from '../lib/errors'
+import { isDocxFile, LIMITS, sizeError } from '../lib/errors'
 import { rangeIssue } from '../lib/parse'
 import { convertDocxToPdf, cropWordPdf } from '../lib/word'
 import type { IncomingFiles } from '../types'
@@ -31,7 +31,7 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
     const docx = files.filter(isDocxFile)
     if (!docx.length) throw new Error('Chỉ hỗ trợ file .docx.')
     if (docx.length > 1) throw new Error('Chọn một file .docx mỗi lần.')
-    if (docx[0].size > LIMITS.maxFileBytes) throw new Error('File vượt quá 25 MB.')
+    if (docx[0].size > LIMITS.maxFileBytes) throw new Error(sizeError(docx[0]))
     const converted = await convertDocxToPdf(docx[0])
     setFile(docx[0])
     setBytes(converted.bytes)

@@ -1,8 +1,14 @@
 export const LIMITS = {
-  maxFileBytes: 25 * 1024 * 1024,
-  maxFilesPerDrop: 20,
-  maxOutputPages: 1000,
+  maxFileBytes: 200 * 1024 * 1024,
+  maxFilesPerDrop: 50,
+  maxOutputPages: 5000,
 } as const
+
+export const fileSizeLabel = `${LIMITS.maxFileBytes / 1024 / 1024} MB`
+
+export function sizeError(file: File): string {
+  return `"${file.name}" vượt quá ${fileSizeLabel}.`
+}
 
 export function isPdfFile(file: File): boolean {
   return file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')

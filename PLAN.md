@@ -123,7 +123,7 @@ download(bytes, 'ket-qua.pdf');
 
 ### 3.3 Dropzone dùng chung & auto-detect
 
-Một khung duy nhất ở giữa, `accept` động: Tab 1 = `.pdf,application/pdf` (multiple), Tab 2 = `.docx` (single). Khi user kéo sai định dạng: **tự chuyển tab** tương ứng rồi nạp file (thay vì chỉ báo lỗi) — kèm microcopy *"Đã chuyển sang tab Word → PDF"*. Kiểm tra bằng `file.type` **và** extension. Giới hạn 25 MB/file, tối đa 20 file/lần drop.
+Một khung duy nhất ở giữa, `accept` động: Tab 1 = `.pdf,application/pdf` (multiple), Tab 2 = `.docx` (single). Khi user kéo sai định dạng: **tự chuyển tab** tương ứng rồi nạp file (thay vì chỉ báo lỗi) — kèm microcopy *"Đã chuyển sang tab Word → PDF"*. Kiểm tra bằng `file.type` **và** extension. Giới hạn 200 MB/file, tối đa 50 file/lần drop.
 
 ---
 
@@ -198,7 +198,7 @@ Một khung duy nhất ở giữa, `accept` động: Tab 1 = `.pdf,application/p
 | Framework | **Vite + React 19 + TypeScript** |
 | Tên repo | **`tailieu-sach`** — public trên `dillysluvu` |
 | Kéo sai định dạng | **Tự chuyển tab** rồi nạp file, kèm microcopy |
-| Ngưỡng bảo vệ | **25 MB/file · 20 file/lần drop · 1000 trang output** |
+| Ngưỡng bảo vệ | **200 MB/file · 50 file/lần drop · 5000 trang output** |
 | Ngôn ngữ UI | **Tiếng Việt** (không công tắc song ngữ) |
 
 Rủi ro còn lại đã được xử lý trong thiết kế: `.docx` không có trang cố định → convert trước để đếm trang; mammoth bỏ layout phức tạp → ghi chú ngắn trong UI; PDF mã hóa → thông báo thân thiện.

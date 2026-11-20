@@ -1,6 +1,6 @@
 # sạch.
 
-Cắt & gộp PDF theo khoảng trang và chuyển Word (`.docx`) sang PDF. **Mọi thứ đều xử lý trên trình duyệt** — file không được upload, không có máy chủ, không quảng cáo.
+Cắt & gộp PDF, chuyển Word sang PDF và trích văn bản PDF sang Word. **Mọi thứ đều xử lý trên trình duyệt** — file không được upload, không có máy chủ, không quảng cáo.
 
 ## Tính năng
 
@@ -14,6 +14,11 @@ Cắt & gộp PDF theo khoảng trang và chuyển Word (`.docx`) sang PDF. **M�
 **Tab 2 — Word → PDF**
 - Kéo `.docx` vào là tự động chuyển sang PDF (A4), hiển thị số trang.
 - Nhập `Từ` → `Đến` để cắt trước khi tải về.
+
+**Tab 3 — PDF → Word**
+- Kéo `.pdf` vào, chọn `Từ` → `Đến`, tải về file `.docx` với chữ sửa được.
+- Dùng `pdf.js` để trích text theo dòng, `docx` để đóng gói; tải worker và thư viện theo yêu cầu.
+- Không giữ layout/bảng/ảnh; PDF scan (ảnh) cần OCR nên sẽ báo lỗi thay vì xuất file rỗng.
 
 **Giao diện V2**
 - Light / Dark theo hệ thống, nút chuyển góc trên (System → Light → Dark).
@@ -34,13 +39,13 @@ npm run preview
 
 ## Giới hạn
 
-- Tối đa 25 MB/file, 20 file mỗi lần kéo, 1000 trang output.
+- Tối đa 200 MB/file, 50 file mỗi lần kéo, 5000 trang output.
 - PDF được mã hóa cần mở khóa trước.
 - `.docx` không có khái niệm trang cố định; số trang được tính theo bản PDF A4 sau chuyển đổi. Mammoth giữ tốt văn bản, tiêu đề, danh sách và ảnh cơ bản; layout phức tạp (cột, header/footer, text box) có thể không giữ nguyên.
 
 ## Cấu trúc
 
-Vite 8 + React 19 + TypeScript 7 + Tailwind CSS v4 + Motion 14. `pdf-lib`, `mammoth`, `dompurify` và `html2pdf.js` được tải động theo nhu cầu; `vercel.json` cấu hình SPA rewrite, cache immutable cho `/assets/*` và security headers. Deploy tĩnh, output là `dist/`.
+Vite 8 + React 19 + TypeScript 7 + Tailwind CSS v4 + Motion 14. `pdf-lib`, `mammoth`, `html2pdf.js`, `pdfjs-dist` và `docx` được tải động theo nhu cầu; `vercel.json` cấu hình SPA rewrite, cache immutable cho `/assets/*` và security headers. Deploy tĩnh, output là `dist/`.
 
 Xem bản thiết kế V2: [`docs/preview-v2.html`](docs/preview-v2.html) và [`PLAN_V2.md`](PLAN_V2.md).
 

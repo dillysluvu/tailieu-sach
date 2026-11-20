@@ -13,7 +13,7 @@ const TABS: Array<{ key: TabKey; label: string; panel: string; icon: ReactNode }
     label: 'Cắt & Gộp PDF',
     panel: 'panel-pdf',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="hidden h-4 w-4 sm:block">
         <path d="M6 3h8l4 4v14H6z" strokeLinejoin="round" />
         <path d="M14 3v4h4M9 12h6M9 16h6" strokeLinecap="round" />
       </svg>
@@ -24,9 +24,20 @@ const TABS: Array<{ key: TabKey; label: string; panel: string; icon: ReactNode }
     label: 'Word → PDF',
     panel: 'panel-word',
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="hidden h-4 w-4 sm:block">
         <path d="M6 3h8l4 4v14H6z" strokeLinejoin="round" />
         <path d="M14 3v4h4M9 12l1.5 4L12 13l1.5 3L15 12" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    key: 'pdftoword',
+    label: 'PDF → Word',
+    panel: 'panel-pdftoword',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="hidden h-4 w-4 sm:block">
+        <path d="M6 3h8l4 4v14H6z" strokeLinejoin="round" />
+        <path d="M14 3v4h4M9 12h4m-2-2v4m4 2h3m0 0-2-2m2 2-2 2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
   },
@@ -50,7 +61,7 @@ export function Tabs({ active, onChange }: Props) {
   }
 
   return (
-    <div role="tablist" aria-label="Chức năng" className="flex gap-5 border-b border-line sm:gap-7">
+    <div role="tablist" aria-label="Chức năng" className="flex gap-3 border-b border-line sm:gap-7">
       {TABS.map((tab, index) => {
         const selected = active === tab.key
         return (
@@ -67,7 +78,7 @@ export function Tabs({ active, onChange }: Props) {
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(tab.key)}
             onKeyDown={(event) => handleKeyDown(event, index)}
-            className={`relative flex min-h-11 items-center text-[13px] transition-colors duration-150 ${
+            className={`relative flex min-h-11 items-center text-[12px] transition-colors duration-150 sm:text-[13px] ${
               selected ? 'font-semibold text-text' : 'text-muted hover:text-text'
             }`}
           >
