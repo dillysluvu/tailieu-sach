@@ -1,4 +1,4 @@
-# file.
+# file — Document Workspace
 
 Cắt & gộp PDF, chuyển Word sang PDF và trích văn bản PDF sang Word. **Mọi thứ đều xử lý trên trình duyệt** — file không được upload, không có máy chủ, không quảng cáo.
 
@@ -10,21 +10,28 @@ Cắt & gộp PDF, chuyển Word sang PDF và trích văn bản PDF sang Word. *
 - Kéo ⠿ hoặc dùng ↑ ↓ để đổi thứ tự xuất (nút 44×44 thân thiện cảm ứng).
 - Nhân bản dòng (⧉) để lấy nhiều đoạn từ cùng một file, ví dụ `1–2` và `8–10`.
 - Gộp thành `ket-qua.pdf` bằng `pdf-lib copyPages` — không nén lại, giữ nguyên chất lượng.
+- Nút **Xem trước** dựng PDF đầu ra bằng `pdf.js` (lật trang, `Esc` để đóng) trước khi tải.
 
 **Tab 2 — Word → PDF**
 - Kéo `.docx` vào là tự động chuyển sang PDF (A4), hiển thị số trang.
 - Nhập `Từ` → `Đến` để cắt trước khi tải về.
+- Nút **Xem trước** hiển thị PDF sau khi chuyển/cắt, tải thẳng từ modal nếu ưng ý.
 
 **Tab 3 — PDF → Word**
 - Kéo `.pdf` vào, chọn `Từ` → `Đến`, tải về file `.docx` với chữ sửa được.
-- Dùng `pdf.js` để trích text theo dòng, `docx` để đóng gói; tải worker và thư viện theo yêu cầu.
-- Không giữ layout/bảng/ảnh; PDF scan (ảnh) cần OCR nên sẽ báo lỗi thay vì xuất file rỗng.
+- Dùng `pdf.js` trích text, `docx` đóng gói; tải worker/thư viện theo yêu cầu.
+- Tự ghép dòng bị ngắt (kể cả gạch nối cuối dòng), nhận diện tiêu đề / danh sách / in đậm-nghiêng / căn lề, tách cột cơ bản và bỏ header-footer lặp.
+- Nút **Xem trước** hiện văn bản đã trích: sửa trực tiếp, gõ `# ` (tiêu đề), `- ` (danh sách), `**chữ**` (đậm), `*chữ*` (nghiêng), rồi tải bản đã sửa.
+- Toggle **Giữ nguyên ranh giới trang** hoặc gộp văn bản liên tục để dễ biên tập.
+- Không giữ layout/bảng/ảnh; PDF scan (ảnh) cần OCR nên báo lỗi thay vì xuất file rỗng.
 
 **Giao diện V2**
 - Light / Dark theo hệ thống, nút chuyển góc trên (System → Light → Dark).
 - Mobile-first: thanh hành động ghim đáy, ô nhập bàn phím số, thẻ file xếp dọc, vùng chạm ≥ 44px.
 - Desktop: bố cục căn giữa, full-window drag overlay, phím tắt `⌘ / Ctrl + Enter` để xuất.
 - Motion nhẹ với `motion` (tải feature theo yêu cầu, tôn trọng `prefers-reduced-motion`).
+- Preview đầu ra (PDF canvas / văn bản có thể sửa) mở trong modal, đóng bằng `Esc`.
+- Title `file — Document Workspace`; ảnh chia sẻ `public/og-image.png` (OG/Twitter card).
 
 Kéo sai định dạng sẽ tự động chuyển sang tab phù hợp.
 

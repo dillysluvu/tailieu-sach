@@ -9,6 +9,7 @@ import { mergeRows } from '../lib/pdf'
 import { rangeIssue, totalPages } from '../lib/parse'
 import type { IncomingFiles } from '../types'
 import { Dropzone } from './Dropzone'
+import { PdfPreviewModal } from './PdfPreviewModal'
 import { PdfRowItem } from './PdfRowItem'
 import { StickyActionBar } from './StickyActionBar'
 import { StatusLine } from './StatusLine'
@@ -25,6 +26,8 @@ export function PdfMergerPanel({ incoming, onFiles, active, exportRef }: Props) 
   const { status, message, run } = useAsyncTask()
   const [dragging, setDragging] = useState<string | null>(null)
   const [announcement, setAnnouncement] = useState('')
+  const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
   const extraInput = useRef<HTMLInputElement>(null)
   const lastToken = useRef(0)
 
@@ -49,6 +52,17 @@ export function PdfMergerPanel({ incoming, onFiles, active, exportRef }: Props) 
       downloadBytes(bytes, 'ket-qua.pdf')
     }, `Đã xuất ${total} trang.`)
   }, [getCache, invalid, rows, run, tooMany, total])
+
+  const handlePreview = useCallback(() => {
+    void run(async () => {
+      if (!rows.length) throw new Error('Hãy kéo ít nhất một file PDF.')
+      if (invalid) throw new Error('Hãy sửa các khoảng trang trước khi xem.')
+      if (tooMany) throw new Error(`Tối đa ${LIMITS.maxOutputPages} trang mỗi lần xuất.`)
+      const bytes = await mergeRows(rows, getCache())
+      setPreviewBytes(bytes)
+      setPreviewOpen(true)
+    }, 'Đã dựng xong bản xem trước.')
+  }, [getCache, invalid, rows, run, tooMany])
 
   useEffect(() => {
     if (!active) return
@@ -144,6 +158,7 @@ export function PdfMergerPanel({ incoming, onFiles, active, exportRef }: Props) 
             disabled={invalid || tooMany}
             label="Xuất PDF"
             onAction={handleExport}
+            secondary={{ label: 'Xem trước', onClick: handlePreview }}
             summary={
               <>
                 Tổng: <span className="font-semibold text-text">{total}</span> trang từ{' '}
@@ -160,6 +175,17 @@ export function PdfMergerPanel({ incoming, onFiles, active, exportRef }: Props) 
           />
         </>
       )}
+
+      <PdfPreviewModal
+        open={previewOpen}
+        bytes={previewBytes}
+        title="Xem trước bản gộp"
+        onClose={() => setPreviewOpen(false)}
+        onDownload={() => {
+          if (previewBytes) downloadBytes(previewBytes, 'ket-qua.pdf')
+          setPreviewOpen(false)
+        }}
+      />
 
       <StatusLine message={message} status={status} />
     </section>

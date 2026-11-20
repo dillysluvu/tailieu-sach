@@ -103,7 +103,7 @@ download(bytes, 'ket-qua.pdf');
 ```
 - Dùng `copyPages` (khuyến nghị của pdf-lib) để clone cả resource dùng chung; không mutate source → nhân bản nhiều đoạn từ cùng 1 file an toàn.
 - Thứ tự page trong file xuất = thứ tự `rows` sau khi kéo thả.
-- Tổng trang hiển thị realtime ở chân bảng: `Σ(to − from + 1)`. Nút "Xuất PDF" bị disable khi có row sai range hoặc tổng > **1000 trang** (giới hạn bảo vệ RAM).
+- Tổng trang hiển thị realtime ở chân bảng: `Σ(to − from + 1)`. Nút "Xuất PDF" bị disable khi có row sai range hoặc tổng > **10.000 trang** (giới hạn bảo vệ RAM).
 
 **Kéo thả đổi thứ tự:** HTML5 DnD native trên `<li draggable>` (`onDragStart` lưu `id`, `onDragOver preventDefault`, `onDrop` splice mảng). Nút `↑ / ↓` nhỏ làm fallback bàn phím & mobile (không thêm dependency dnd-kit). Dropzone chính và DnD row tách biệt rõ ràng.
 
@@ -123,7 +123,7 @@ download(bytes, 'ket-qua.pdf');
 
 ### 3.3 Dropzone dùng chung & auto-detect
 
-Một khung duy nhất ở giữa, `accept` động: Tab 1 = `.pdf,application/pdf` (multiple), Tab 2 = `.docx` (single). Khi user kéo sai định dạng: **tự chuyển tab** tương ứng rồi nạp file (thay vì chỉ báo lỗi) — kèm microcopy *"Đã chuyển sang tab Word → PDF"*. Kiểm tra bằng `file.type` **và** extension. Giới hạn 200 MB/file, tối đa 50 file/lần drop.
+Một khung duy nhất ở giữa, `accept` động: Tab 1 = `.pdf,application/pdf` (multiple), Tab 2 = `.docx` (single). Khi user kéo sai định dạng: **tự chuyển tab** tương ứng rồi nạp file (thay vì chỉ báo lỗi) — kèm microcopy *"Đã chuyển sang tab Word → PDF"*. Kiểm tra bằng `file.type` **và** extension. Giới hạn 500 MB/file, tối đa 100 file/lần drop.
 
 ---
 
@@ -131,7 +131,7 @@ Một khung duy nhất ở giữa, `accept` động: Tab 1 = `.pdf,application/p
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  file.                     🔒 Xử lý trên trình duyệt     │  ← header 56px
+│  file — Document Workspace  🔒 Xử lý trên trình duyệt     │  ← header 56px
 ├─────────────────────────────────────────────────────────┤
 │  [ Cắt & Gộp PDF ]  [ Word → PDF ]                      │  ← tab underline 2px
 ├─────────────────────────────────────────────────────────┤

@@ -7,6 +7,7 @@ import { rangeIssue } from '../lib/parse'
 import { convertDocxToPdf, cropWordPdf } from '../lib/word'
 import type { IncomingFiles } from '../types'
 import { Dropzone } from './Dropzone'
+import { PdfPreviewModal } from './PdfPreviewModal'
 import { RangeInputs } from './RangeInputs'
 import { StickyActionBar } from './StickyActionBar'
 import { StatusLine } from './StatusLine'
@@ -24,6 +25,7 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
   const [pageCount, setPageCount] = useState(0)
   const [from, setFrom] = useState(1)
   const [to, setTo] = useState(1)
+  const [previewOpen, setPreviewOpen] = useState(false)
   const lastToken = useRef(0)
   const { status, message, run, reset } = useAsyncTask()
 
@@ -73,6 +75,7 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
     setPageCount(0)
     setFrom(1)
     setTo(1)
+    setPreviewOpen(false)
   }
 
   return (
@@ -134,6 +137,7 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
             disabled={!!issue}
             label="Tải PDF"
             onAction={handleDownload}
+            secondary={{ label: 'Xem trước', onClick: () => setPreviewOpen(true) }}
             summary={
               <>
                 Giữ <span className="font-semibold text-text">{Math.max(0, to - from + 1)}</span> / {pageCount} trang
@@ -142,6 +146,13 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
           />
         </>
       )}
+
+      <PdfPreviewModal
+        open={previewOpen}
+        bytes={bytes}
+        title="Xem trước PDF từ Word"
+        onClose={() => setPreviewOpen(false)}
+      />
 
       <StatusLine message={message} status={status} />
     </section>

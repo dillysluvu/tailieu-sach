@@ -8,9 +8,10 @@ type Props = {
   disabled?: boolean
   busy?: boolean
   extra?: ReactNode
+  secondary?: { label: string; onClick: () => void }
 }
 
-export function StickyActionBar({ summary, label, onAction, disabled = false, busy = false, extra }: Props) {
+export function StickyActionBar({ summary, label, onAction, disabled = false, busy = false, extra, secondary }: Props) {
   const reduce = useReducedMotion()
 
   return (
@@ -28,7 +29,17 @@ export function StickyActionBar({ summary, label, onAction, disabled = false, bu
           )}
           <p className="text-[11px] tabular text-muted">{summary}</p>
           <div className="flex items-center gap-3">
-            <button type="button" onClick={onAction} disabled={disabled || busy} className="btn-primary w-full md:w-auto">
+            {secondary && (
+              <button type="button" onClick={secondary.onClick} disabled={busy} className="btn-ghost shrink-0">
+                {secondary.label}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onAction}
+              disabled={disabled || busy}
+              className={`btn-primary ${secondary ? 'flex-1 md:flex-none' : 'w-full md:w-auto'}`}
+            >
               {busy && (
                 <svg viewBox="0 0 24 24" fill="none" className="ts-spinner h-4 w-4">
                   <circle cx="12" cy="12" r="9" stroke="currentColor" strokeOpacity="0.3" strokeWidth="2.5" />
