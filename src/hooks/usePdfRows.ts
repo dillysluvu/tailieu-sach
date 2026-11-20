@@ -88,6 +88,8 @@ export function usePdfRows() {
     })
   }, [])
 
+  const getCache = useCallback(() => cache.current, [])
+
   return {
     rows,
     loading,
@@ -97,6 +99,6 @@ export function usePdfRows() {
     removeRow,
     moveRow,
     reorderRow,
-    getCache: () => cache.current,
+    getCache,
   }
 }

@@ -8,8 +8,29 @@
       name="description"
       content="Cắt và gộp PDF theo khoảng trang, chuyển Word sang PDF. Xử lý hoàn toàn trên trình duyệt, không upload file."
     />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#fafafa" />
+    <meta property="og:title" content="sạch. — Cắt & gộp PDF, Word sang PDF" />
+    <meta
+      property="og:description"
+      content="Cắt và gộp PDF theo khoảng trang, chuyển Word sang PDF. File không rời trình duyệt."
+    />
+    <meta property="og:type" content="website" />
     <title>sạch. — Cắt & gộp PDF, Word sang PDF</title>
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('ts-theme')
+          var dark =
+            saved === 'dark' ||
+            ((!saved || saved === 'system') &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches)
+          if (dark) document.documentElement.classList.add('dark')
+          document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+        } catch (error) {
+          /* localStorage có thể bị chặn — mặc định light */
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -7,15 +7,21 @@ type NumberBoxProps = {
 
 function NumberBox({ label, value, max, onChange }: NumberBoxProps) {
   return (
-    <input
-      type="number"
-      aria-label={label}
-      min={1}
-      max={max}
-      value={Number.isFinite(value) ? value : ''}
-      onChange={(event) => onChange(event.target.value === '' ? 0 : Number(event.target.value))}
-      className="w-14 rounded border-b border-neutral-300 bg-white px-1 py-1 text-center text-sm tabular-nums text-neutral-950 focus:border-neutral-950 focus:outline-none"
-    />
+    <label className="flex flex-col gap-1">
+      <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-faint">{label}</span>
+      <input
+        type="number"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        autoComplete="off"
+        aria-label={label}
+        min={1}
+        max={max}
+        value={Number.isFinite(value) ? value : ''}
+        onChange={(event) => onChange(event.target.value === '' ? 0 : Number(event.target.value))}
+        className="h-11 w-14 rounded-control border border-line bg-surface px-1 text-center text-base tabular text-text outline-none transition-colors duration-150 hover:border-line-strong focus:border-accent focus:ring-2 focus:ring-accent-soft sm:w-16 sm:text-sm"
+      />
+    </label>
   )
 }
 
@@ -28,13 +34,13 @@ type Props = {
 
 export function RangeInputs({ from, to, max, onChange }: Props) {
   return (
-    <div className="flex items-center gap-2">
-      <NumberBox label="Từ trang" value={from} max={max} onChange={(value) => onChange(value, to)} />
-      <span aria-hidden="true" className="text-xs text-neutral-400">
+    <div className="flex items-end gap-2">
+      <NumberBox label="Từ" value={from} max={max} onChange={(value) => onChange(value, to)} />
+      <span aria-hidden="true" className="pb-3.5 text-xs text-faint">
         →
       </span>
-      <NumberBox label="Đến trang" value={to} max={max} onChange={(value) => onChange(from, value)} />
-      <span className="text-xs tabular-nums text-neutral-400">/ {max}</span>
+      <NumberBox label="Đến" value={to} max={max} onChange={(value) => onChange(from, value)} />
+      <span className="pb-3.5 text-xs tabular text-faint">/ {max}</span>
     </div>
   )
 }

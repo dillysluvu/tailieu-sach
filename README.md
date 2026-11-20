@@ -1,18 +1,25 @@
 # sạch.
 
-Cắt & gộp PDF theo khoảng trang và chuyển Word (`.docx`) sang PDF. **Mọi thử đều xử lý trên trình duyệt** — file không được upload, không có máy chủ, không quảng cáo.
+Cắt & gộp PDF theo khoảng trang và chuyển Word (`.docx`) sang PDF. **Mọi thứ đều xử lý trên trình duyệt** — file không được upload, không có máy chủ, không quảng cáo.
 
 ## Tính năng
 
 **Tab 1 — Cắt & Gộp PDF**
-- Kéo thả nhiều file `.pdf` cùng lúc; mỗi file một dòng gồm tên, tổng số trang và ô `Từ` → `Đến` (mặc định `1 → trang cuối`).
-- Kéo ⠿ hoặc dùng ↑ ↓ để đổi thứ tự xuất.
+- Kéo thả nhiều file `.pdf` cùng lúc; kéo từ bất kỳ đâu vào cửa sổ đều được.
+- Mỗi dòng: tên file, tổng số trang, ô `Từ` → `Đến` (mặc định `1 → trang cuối`).
+- Kéo ⠿ hoặc dùng ↑ ↓ để đổi thứ tự xuất (nút 44×44 thân thiện cảm ứng).
 - Nhân bản dòng (⧉) để lấy nhiều đoạn từ cùng một file, ví dụ `1–2` và `8–10`.
-- Gộp tất cả đoạn thành một file `ket-qua.pdf` bằng `pdf-lib copyPages` — không nén lại, giữ nguyên chất lượng.
+- Gộp thành `ket-qua.pdf` bằng `pdf-lib copyPages` — không nén lại, giữ nguyên chất lượng.
 
 **Tab 2 — Word → PDF**
 - Kéo `.docx` vào là tự động chuyển sang PDF (A4), hiển thị số trang.
 - Nhập `Từ` → `Đến` để cắt trước khi tải về.
+
+**Giao diện V2**
+- Light / Dark theo hệ thống, nút chuyển góc trên (System → Light → Dark).
+- Mobile-first: thanh hành động ghim đáy, ô nhập bàn phím số, thẻ file xếp dọc, vùng chạm ≥ 44px.
+- Desktop: bố cục căn giữa, full-window drag overlay, phím tắt `⌘ / Ctrl + Enter` để xuất.
+- Motion nhẹ với `motion` (tải feature theo yêu cầu, tôn trọng `prefers-reduced-motion`).
 
 Kéo sai định dạng sẽ tự động chuyển sang tab phù hợp.
 
@@ -21,7 +28,7 @@ Kéo sai định dạng sẽ tự động chuyển sang tab phù hợp.
 ```bash
 npm install
 npm run dev
-npm run build
+npm run check      # typecheck + lint + build
 npm run preview
 ```
 
@@ -33,7 +40,16 @@ npm run preview
 
 ## Cấu trúc
 
-Vite + React 19 + TypeScript + Tailwind CSS v4. Các thư viện nặng (`pdf-lib`, `mammoth`, `html2pdf.js`) được tải theo yêu cầu. Deploy tĩnh, output là `dist/`.
+Vite 8 + React 19 + TypeScript 7 + Tailwind CSS v4 + Motion 14. `pdf-lib`, `mammoth`, `dompurify` và `html2pdf.js` được tải động theo nhu cầu; `vercel.json` cấu hình SPA rewrite, cache immutable cho `/assets/*` và security headers. Deploy tĩnh, output là `dist/`.
+
+Xem bản thiết kế V2: [`docs/preview-v2.html`](docs/preview-v2.html) và [`PLAN_V2.md`](PLAN_V2.md).
+
+## CI / Deploy
+
+- GitHub Actions (`.github/workflows/ci.yml`) chạy `npm run check` trên push `main` và mọi PR.
+- Push `main` → tự deploy production; PR → tự deploy preview và comment URL vào PR.
+- secrets cần thiết: `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
+- Nếu sau này bật native Git integration trong Vercel Dashboard, xóa job `deploy-production` / `deploy-preview` để tránh deploy trùng.
 
 ## Links
 

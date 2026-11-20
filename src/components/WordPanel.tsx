@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useAsyncTask } from '../hooks/useAsyncTask'
+import type { ExportRef } from '../hooks/useExportShortcut'
 import { downloadBytes } from '../lib/download'
 import { isDocxFile, LIMITS } from '../lib/errors'
 import { rangeIssue } from '../lib/parse'
@@ -7,14 +8,17 @@ import { convertDocxToPdf, cropWordPdf } from '../lib/word'
 import type { IncomingFiles } from '../types'
 import { Dropzone } from './Dropzone'
 import { RangeInputs } from './RangeInputs'
+import { StickyActionBar } from './StickyActionBar'
 import { StatusLine } from './StatusLine'
 
 type Props = {
   incoming: IncomingFiles
   onFiles: (files: File[]) => void
+  active: boolean
+  exportRef: ExportRef
 }
 
-export function WordPanel({ incoming, onFiles }: Props) {
+export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
   const [file, setFile] = useState<File | null>(null)
   const [bytes, setBytes] = useState<Uint8Array | null>(null)
   const [pageCount, setPageCount] = useState(0)
@@ -46,13 +50,21 @@ export function WordPanel({ incoming, onFiles }: Props) {
   const issue = bytes ? rangeIssue(from, to, pageCount) : null
   const busy = status === 'running'
 
-  const handleDownload = () => {
+  const handleDownload = useCallback(() => {
     if (!file || !bytes) return
     void run(async () => {
       const output = from === 1 && to === pageCount ? bytes : await cropWordPdf(bytes, from, to)
       downloadBytes(output, `${file.name.replace(/\.docx$/i, '')}.pdf`)
     }, 'Đã tải file PDF.')
-  }
+  }, [bytes, file, from, pageCount, run, to])
+
+  useEffect(() => {
+    if (!active) return
+    exportRef.current = handleDownload
+    return () => {
+      if (exportRef.current === handleDownload) exportRef.current = null
+    }
+  }, [active, exportRef, handleDownload])
 
   const clear = () => {
     reset()
@@ -65,54 +77,65 @@ export function WordPanel({ incoming, onFiles }: Props) {
 
   return (
     <section>
+      <h1 className="sr-only">Word sang PDF</h1>
+
       <Dropzone
         accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
         multiple={false}
         title="Kéo file Word (.docx) vào đây"
         hint="hoặc bấm để chọn · chuyển sang PDF ngay lập tức"
         onFiles={onFiles}
+        busy={busy}
       />
 
       {bytes && file && (
-        <div className="mt-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 pb-4">
-            <div className="min-w-0">
-              <p className="truncate text-sm" title={file.name}>
+        <>
+          <div className="mt-6 flex flex-wrap items-start justify-between gap-3 border-b border-line pb-4">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-text" title={file.name}>
                 {file.name}
               </p>
-              <p className="text-xs tabular-nums text-neutral-500">{pageCount} trang · sẵn sàng</p>
+              <p className="mt-0.5 text-[11px] tabular text-muted">{pageCount} trang · sẵn sàng</p>
             </div>
-            <button
-              type="button"
-              onClick={clear}
-              className="text-xs text-neutral-600 underline-offset-2 hover:text-neutral-950 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950"
-            >
+            <button type="button" onClick={clear} className="btn-ghost -mr-2">
               Chọn file khác
             </button>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
+          <div className="mt-5 flex flex-wrap items-end justify-between gap-4 md:gap-6">
             <div>
-              <p className="text-xs text-neutral-500">Khoảng trang cần giữ</p>
-              <div className="mt-2">
-                <RangeInputs from={from} to={to} max={pageCount} onChange={(nextFrom, nextTo) => { setFrom(nextFrom); setTo(nextTo) }} />
-              </div>
-              {issue && <p className="mt-2 text-xs text-red-700">{issue}</p>}
+              <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.1em] text-faint">
+                Khoảng trang cần giữ
+              </p>
+              <RangeInputs
+                from={from}
+                to={to}
+                max={pageCount}
+                onChange={(nextFrom, nextTo) => {
+                  setFrom(nextFrom)
+                  setTo(nextTo)
+                }}
+              />
+              {issue && <p className="mt-2 text-[11px] text-danger">{issue}</p>}
             </div>
-            <button
-              type="button"
-              onClick={handleDownload}
-              disabled={!!issue || busy}
-              className="rounded-md bg-neutral-950 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-neutral-300"
-            >
-              {busy ? 'Đang xử lý…' : 'Tải PDF'}
-            </button>
           </div>
 
-          <p className="mt-5 text-xs text-neutral-400">
+          <p className="mt-6 text-[11px] leading-relaxed text-faint">
             Số trang được tính theo bản PDF A4 sau chuyển đổi — .docx không có trang cố định.
           </p>
-        </div>
+
+          <StickyActionBar
+            busy={busy}
+            disabled={!!issue}
+            label="Tải PDF"
+            onAction={handleDownload}
+            summary={
+              <>
+                Giữ <span className="font-semibold text-text">{Math.max(0, to - from + 1)}</span> / {pageCount} trang
+              </>
+            }
+          />
+        </>
       )}
 
       <StatusLine message={message} status={status} />

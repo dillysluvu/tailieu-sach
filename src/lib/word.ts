@@ -1,4 +1,3 @@
-import DOMPurify from 'dompurify'
 import { extractRange, getPdfPageCount } from './pdf'
 
 export type ConvertedWord = {
@@ -7,9 +6,10 @@ export type ConvertedWord = {
 }
 
 export async function convertDocxToPdf(file: File): Promise<ConvertedWord> {
-  const [{ default: mammoth }, { default: html2pdf }] = await Promise.all([
+  const [{ default: mammoth }, { default: html2pdf }, { default: DOMPurify }] = await Promise.all([
     import('mammoth/mammoth.browser'),
     import('html2pdf.js'),
+    import('dompurify'),
   ])
 
   const { value: rawHtml } = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() })

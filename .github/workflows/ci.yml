@@ -1,0 +1,68 @@
+name: CI & Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+
+  deploy-production:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+      - run: npx vercel build --prod --token=$VERCEL_TOKEN
+      - name: Deploy to Vercel
+        run: npx vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+
+  deploy-preview:
+    needs: check
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
+      - run: npx vercel build --token=$VERCEL_TOKEN
+      - name: Deploy preview
+        id: preview
+        run: echo "url=$(npx vercel deploy --prebuilt --token=$VERCEL_TOKEN | tail -1)" >> "$GITHUB_OUTPUT"
+      - name: Comment preview URL
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.preview.outputs.url }}
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🔍 Preview: ${process.env.PREVIEW_URL}`,
+            })
