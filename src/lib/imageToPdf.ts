@@ -1,6 +1,7 @@
 export type ImageItem = {
   id: string
   file: File
+  url: string
   bytes: Uint8Array
   type: 'jpeg' | 'png'
   width: number
@@ -16,6 +17,7 @@ export async function readImage(file: File): Promise<ImageItem> {
   return {
     id: crypto.randomUUID(),
     file,
+    url: URL.createObjectURL(file),
     bytes,
     type,
     width: image.width,

@@ -21,7 +21,7 @@ type Props = {
 
 export function ImageToPdfPanel({ incoming, onFiles, active, exportRef }: Props) {
   const [items, setItems] = useState<ImageItem[]>([])
-  const [urls, setUrls] = useState<Record<string, string>>({})
+  const objectUrls = useRef<Set<string>>(new Set())
   const [filename, setFilename] = useState('')
   const [preset, setPreset] = useState<PagePreset>('all')
   const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null)
@@ -40,6 +40,7 @@ export function ImageToPdfPanel({ incoming, onFiles, active, exportRef }: Props)
       throw new Error(`Tối đa ${LIMITS.maxOutputPages} ảnh mỗi lần.`)
     }
     const prepared = await Promise.all(images.map(readImage))
+    prepared.forEach((item) => objectUrls.current.add(item.url))
     setItems((previous) => [...previous, ...prepared])
   }, [items.length])
 
@@ -50,12 +51,17 @@ export function ImageToPdfPanel({ incoming, onFiles, active, exportRef }: Props)
     }
   }, [incoming, acceptFiles, run])
 
-  useEffect(() => {
-    const next: Record<string, string> = {}
-    for (const item of items) next[item.id] = URL.createObjectURL(item.file)
-    setUrls(next)
-    return () => Object.values(next).forEach((url) => URL.revokeObjectURL(url))
-  }, [items])
+  useEffect(
+    () => () => {
+      objectUrls.current.forEach((url) => URL.revokeObjectURL(url))
+    },
+    [],
+  )
+
+  const release = (item: ImageItem) => {
+    URL.revokeObjectURL(item.url)
+    objectUrls.current.delete(item.url)
+  }
 
   const selected = useMemo(
     () => filterPages(items.map((_, index) => index + 1), preset).map((page) => items[page - 1]),
@@ -124,6 +130,7 @@ export function ImageToPdfPanel({ incoming, onFiles, active, exportRef }: Props)
             <button
               type="button"
               onClick={() => {
+                items.forEach(release)
                 setItems([])
                 setPreviewBytes(null)
                 outputCache.current = null
@@ -138,7 +145,7 @@ export function ImageToPdfPanel({ incoming, onFiles, active, exportRef }: Props)
             {items.map((item, index) => (
               <li key={item.id} className="flex items-center gap-3 border-b border-line py-3">
                 <img
-                  src={urls[item.id]}
+                  src={item.url}
                   alt=""
                   className="h-12 w-12 shrink-0 rounded bg-bg object-cover"
                 />
@@ -173,6 +180,7 @@ export function ImageToPdfPanel({ incoming, onFiles, active, exportRef }: Props)
                     type="button"
                     aria-label="Xóa ảnh"
                     onClick={() => {
+                      release(item)
                       setItems((previous) => previous.filter((entry) => entry.id !== item.id))
                       outputCache.current = null
                     }}
