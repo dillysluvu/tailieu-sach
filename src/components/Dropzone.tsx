@@ -49,7 +49,7 @@ export function Dropzone({ accept, multiple, title, hint, onFiles, busy = false 
       }}
       animate={reduce ? undefined : { scale: over ? 1.004 : 1 }}
       transition={{ duration: 0.18, ease: [0.2, 0.8, 0.2, 1] }}
-      className={`flex min-h-35 cursor-pointer flex-col items-center justify-center gap-2 rounded-dropzone border border-dashed px-4 py-8 text-center transition-colors duration-150 sm:min-h-46 ${
+      className={`soft-shadow flex min-h-35 cursor-pointer flex-col items-center justify-center gap-2 rounded-dropzone border border-dashed px-4 py-8 text-center transition-colors duration-150 sm:min-h-46 ${
         over
           ? 'border-accent bg-accent-soft'
           : 'border-line-strong bg-surface hover:border-accent hover:bg-accent-soft/40'
@@ -68,15 +68,18 @@ export function Dropzone({ accept, multiple, title, hint, onFiles, busy = false 
       />
       <m.svg
         aria-hidden="true"
-        viewBox="0 0 24 24"
+        viewBox="0 0 48 48"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.5"
-        animate={reduce ? undefined : { y: over ? -3 : 0, opacity: over ? 1 : 0.75 }}
+        strokeWidth="1.6"
+        animate={reduce ? undefined : { y: over ? -3 : 0, opacity: over ? 1 : 0.8 }}
         transition={{ duration: 0.18 }}
-        className={`h-7 w-7 ${over ? 'text-accent' : 'text-faint'}`}
+        className={`h-11 w-11 ${over ? 'text-accent' : 'text-faint'}`}
       >
-        <path d="M12 16V4m0 0L8 8m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" />
+        <rect x="9" y="7" width="19" height="25" rx="3" opacity="0.45" />
+        <rect x="20" y="14" width="19" height="25" rx="3" />
+        <path d="M25 21h9M25 26h9M25 31h6" strokeLinecap="round" />
+        <path d="M13 38v5m0 0-2.5-2.5M13 43l2.5-2.5" strokeLinecap="round" strokeLinejoin="round" />
       </m.svg>
       <p className="text-[13px] font-semibold tracking-[-0.01em] text-text">{title}</p>
       <p className="text-xs text-muted">{hint}</p>

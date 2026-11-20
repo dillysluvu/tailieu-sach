@@ -68,25 +68,28 @@ export default function App() {
   const dragging = useGlobalDrag(handleFiles)
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-32 pt-6 sm:px-8 sm:pt-8 md:max-w-3xl md:pb-12">
-      <header className="flex items-center justify-between gap-3">
+    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-32 pt-5 sm:px-8 sm:pt-7 md:max-w-3xl md:pb-12">
+      <header className="sticky top-0 z-20 -mx-4 flex items-center justify-between border-b border-line/70 bg-bg/80 px-4 py-3 backdrop-blur-xl sm:-mx-8 sm:px-8">
         <div className="flex items-center gap-2.5">
-          <span aria-hidden="true" className="inline-block h-3.5 w-3.5 rounded-[2px] bg-text" />
+          <span aria-hidden="true" className="relative inline-block h-4 w-4 rounded-[5px] bg-text">
+            <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-accent" />
+          </span>
           <span className="text-[15px] font-semibold tracking-[-0.03em] text-text">sạch.</span>
         </div>
-        <div className="flex items-center gap-2">
-          <p className="hidden items-center gap-1.5 text-[11px] text-muted sm:flex">
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-3.5 w-3.5">
-              <rect x="5" y="10" width="14" height="10" rx="2" />
-              <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-            </svg>
-            File không rời trình duyệt
-          </p>
-          <ThemeToggle preference={preference} onCycle={cycle} />
-        </div>
+        <ThemeToggle preference={preference} onCycle={cycle} />
       </header>
 
-      <div className="mt-7 sm:mt-9">
+      <section className="mt-8 sm:mt-10">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-faint">Tiện ích tài liệu</p>
+        <h1 className="mt-2 max-w-xl text-[26px] font-semibold leading-[1.15] tracking-[-0.04em] text-text sm:text-[34px]">
+          Cắt &amp; gộp PDF, Word sang PDF — gọn trong một trang.
+        </h1>
+        <p className="mt-2.5 max-w-lg text-[13px] leading-relaxed text-muted">
+          Kéo file vào, chọn khoảng trang rồi tải về.
+        </p>
+      </section>
+
+      <div className="mt-8 sm:mt-9">
         <Tabs active={tab} onChange={setTab} />
       </div>
 
@@ -98,7 +101,7 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: -6 }}
             transition={{ duration: 0.2 }}
-            className="fixed left-1/2 top-4 z-40 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-card border border-line bg-surface px-3.5 py-2.5 text-center text-xs text-text shadow-[0_8px_30px_rgba(0,0,0,0.10)]"
+            className="fixed left-1/2 top-20 z-40 w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 rounded-card border border-line bg-surface px-3.5 py-2.5 text-center text-xs text-text shadow-[var(--shadow)]"
           >
             {notice}
           </m.div>
@@ -106,35 +109,13 @@ export default function App() {
       </AnimatePresence>
 
       <div className="mt-6 flex-1">
-        <div
-          id="panel-pdf"
-          role="tabpanel"
-          aria-labelledby="tab-pdf"
-          className={tab === 'pdf' ? '' : 'hidden'}
-        >
-          <PdfMergerPanel
-            incoming={incoming}
-            onFiles={handleFiles}
-            active={tab === 'pdf'}
-            exportRef={exportRef}
-          />
+        <div id="panel-pdf" role="tabpanel" aria-labelledby="tab-pdf" className={tab === 'pdf' ? '' : 'hidden'}>
+          <PdfMergerPanel incoming={incoming} onFiles={handleFiles} active={tab === 'pdf'} exportRef={exportRef} />
         </div>
-        <div
-          id="panel-word"
-          role="tabpanel"
-          aria-labelledby="tab-word"
-          className={tab === 'word' ? '' : 'hidden'}
-        >
-          <WordPanel
-            incoming={incoming}
-            onFiles={handleFiles}
-            active={tab === 'word'}
-            exportRef={exportRef}
-          />
+        <div id="panel-word" role="tabpanel" aria-labelledby="tab-word" className={tab === 'word' ? '' : 'hidden'}>
+          <WordPanel incoming={incoming} onFiles={handleFiles} active={tab === 'word'} exportRef={exportRef} />
         </div>
       </div>
-
-      <footer className="pt-10 text-[11px] text-faint">Không quảng cáo · Không lưu trữ · Mở là dùng ngay</footer>
 
       <DragOverlay visible={dragging} />
     </main>

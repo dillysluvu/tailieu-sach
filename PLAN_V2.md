@@ -98,11 +98,11 @@ Monochrome làm nền, **một accent duy nhất** dùng có chừng mực (focu
 
 ### 2.4 `src/components/ThemeToggle.tsx` (mới)
 - Nút 44×44 cycling `system → light → dark`, icon Sun/Moon/Monitor, `aria-label` mô tả trạng thái tiếp theo, tooltip `title`.
-- Đặt trong header cạnh chip "File không rời trình duyệt".
+- Đặt trong header cạnh wordmark (bỏ chip "File không rời trình duyệt" theo yêu cầu — giao diện gọn hơn).
 
 ### 2.5 `src/App.tsx`
 - Layout `max-w-2xl lg:max-w-3xl`, `px-4 sm:px-6`, `pb-28 md:pb-10` (chừa chỗ sticky bar).
-- Header: wordmark + privacy chip + `ThemeToggle`.
+- Header sticky: wordmark + `ThemeToggle` (không chip chú thích). Hero lớn hơn, gradient nền rất nhẹ, card đổ bóng mềm.
 - Nâng `notice` thành `<Toast>` (xem 2.9) thay vì `<p>`.
 - Thêm `useGlobalDrag()` → `<DragOverlay />` full-window.
 - Đăng ký `Ctrl/Cmd + Enter` qua ref: `exportRef.current` do panel active đăng ký `handleExport` (xem 2.10); `Esc` đóng overlay/toast.

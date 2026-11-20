@@ -62,7 +62,7 @@ export function PdfMergerPanel({ incoming, onFiles, active, exportRef }: Props) 
 
   return (
     <section>
-      <h1 className="sr-only">Cắt & gộp PDF</h1>
+      <h2 className="sr-only">Cắt & gộp PDF</h2>
 
       <Dropzone
         accept=".pdf,application/pdf"

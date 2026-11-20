@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, type ReactNode } from 'react'
 import { m, useReducedMotion } from 'motion/react'
 import type { TabKey } from '../types'
 
@@ -7,9 +7,29 @@ type Props = {
   onChange: (tab: TabKey) => void
 }
 
-const TABS: Array<{ key: TabKey; label: string; panel: string }> = [
-  { key: 'pdf', label: 'Cắt & Gộp PDF', panel: 'panel-pdf' },
-  { key: 'word', label: 'Word → PDF', panel: 'panel-word' },
+const TABS: Array<{ key: TabKey; label: string; panel: string; icon: ReactNode }> = [
+  {
+    key: 'pdf',
+    label: 'Cắt & Gộp PDF',
+    panel: 'panel-pdf',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+        <path d="M6 3h8l4 4v14H6z" strokeLinejoin="round" />
+        <path d="M14 3v4h4M9 12h6M9 16h6" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    key: 'word',
+    label: 'Word → PDF',
+    panel: 'panel-word',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+        <path d="M6 3h8l4 4v14H6z" strokeLinejoin="round" />
+        <path d="M14 3v4h4M9 12l1.5 4L12 13l1.5 3L15 12" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
 ]
 
 export function Tabs({ active, onChange }: Props) {
@@ -51,7 +71,10 @@ export function Tabs({ active, onChange }: Props) {
               selected ? 'font-semibold text-text' : 'text-muted hover:text-text'
             }`}
           >
-            {tab.label}
+            <span className="flex items-center gap-2">
+              {tab.icon}
+              {tab.label}
+            </span>
             {selected && (
               <m.span
                 layoutId="tab-indicator"

@@ -77,7 +77,7 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
 
   return (
     <section>
-      <h1 className="sr-only">Word sang PDF</h1>
+      <h2 className="sr-only">Word sang PDF</h2>
 
       <Dropzone
         accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -91,11 +91,16 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
       {bytes && file && (
         <>
           <div className="mt-6 flex flex-wrap items-start justify-between gap-3 border-b border-line pb-4">
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-text" title={file.name}>
-                {file.name}
-              </p>
-              <p className="mt-0.5 text-[11px] tabular text-muted">{pageCount} trang · sẵn sàng</p>
+            <div className="flex min-w-0 flex-1 items-start gap-2">
+              <span className="mt-0.5 shrink-0 rounded bg-accent-soft px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.08em] text-accent">
+                DOCX
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-text" title={file.name}>
+                  {file.name}
+                </p>
+                <p className="mt-0.5 text-[11px] tabular text-muted">{pageCount} trang · sẵn sàng</p>
+              </div>
             </div>
             <button type="button" onClick={clear} className="btn-ghost -mr-2">
               Chọn file khác

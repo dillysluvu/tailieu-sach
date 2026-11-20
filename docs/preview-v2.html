@@ -56,8 +56,6 @@
   .brand { display:flex; align-items:center; gap:8px; }
   .brand i { display:inline-block; width:14px; height:14px; background:var(--text); border-radius:2px; }
   .brand b { font-size:15px; letter-spacing:-.03em; }
-  .privacy { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
-  .frame.mobile .privacy span { display:none; }
   .iconbtn {
     width:44px; height:44px; display:grid; place-items:center; border:1px solid var(--line);
     background:var(--surface); color:var(--muted); border-radius:8px; cursor:pointer; transition:.15s var(--ease);
@@ -217,7 +215,6 @@
       <div class="app">
         <header>
           <div class="brand"><i></i><b>sạch.</b></div>
-          <div class="privacy">🔒 File không rời trình duyệt</div>
           <button class="iconbtn" aria-label="Đổi theme">◐</button>
         </header>
         <nav class="tabs"><button class="tab active">Cắt &amp; Gộp PDF</button><button class="tab">Word → PDF</button></nav>
@@ -260,7 +257,6 @@
       <div class="app">
         <header>
           <div class="brand"><i></i><b>sạch.</b></div>
-          <div class="privacy">🔒 <span>File không rời trình duyệt</span></div>
           <button class="iconbtn" aria-label="Đổi theme">◐</button>
         </header>
         <nav class="tabs"><button class="tab active">Cắt &amp; Gộp PDF</button><button class="tab">Word → PDF</button></nav>

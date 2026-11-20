@@ -14,7 +14,7 @@ export function StickyActionBar({ summary, label, onAction, disabled = false, bu
   const reduce = useReducedMotion()
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:static md:inset-auto md:mt-0 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+    <div className="soft-shadow fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:static md:inset-auto md:mt-0 md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none">
       <div className="mx-auto w-full max-w-3xl px-4 py-3 sm:px-8 md:px-0 md:py-0">
         <div className="relative flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:border-t md:border-line md:pt-4">
           {busy && (

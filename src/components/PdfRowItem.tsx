@@ -71,11 +71,16 @@ export function PdfRowItem({
           ⠿
         </span>
 
-        <div className="min-w-0 basis-[calc(100%-64px)] flex-1 md:basis-auto">
-          <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-text" title={row.name}>
-            {row.name}
-          </p>
-          <p className="mt-0.5 text-[11px] tabular text-muted">{row.pageCount} trang</p>
+        <div className="flex min-w-0 basis-[calc(100%-64px)] items-start gap-2 flex-1 md:basis-auto">
+          <span className="mt-0.5 shrink-0 rounded bg-accent-soft px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.08em] text-accent">
+            PDF
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-[13px] font-medium tracking-[-0.01em] text-text" title={row.name}>
+              {row.name}
+            </p>
+            <p className="mt-0.5 text-[11px] tabular text-muted">{row.pageCount} trang</p>
+          </div>
         </div>
 
         <div className="flex w-full flex-wrap items-center justify-between gap-2 md:w-auto md:flex-nowrap md:justify-end">
