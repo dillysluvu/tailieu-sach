@@ -1,0 +1,1965 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Homelab GUI Blueprint — Omarchy (Hyprland) / Fedora GUI + Fedora Niri &amp; Kiri</title>
+  <style>
+    :root {
+      --bg-body: #060a12;
+      --bg-surface: #0e1525;
+      --bg-card: #131c30;
+      --bg-card-hover: #18233c;
+      --bg-code: #05080f;
+      --border: #202e4a;
+      --border-strong: #31456d;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-server: #38bdf8;
+      --accent-server-soft: rgba(56, 189, 248, 0.12);
+      --accent-fedora: #a78bfa;
+      --accent-fedora-soft: rgba(167, 139, 250, 0.13);
+      --accent-kiri: #fb7185;
+      --accent-kiri-soft: rgba(251, 113, 133, 0.13);
+      --accent-green: #10b981;
+      --accent-green-soft: rgba(16, 185, 129, 0.12);
+      --accent-amber: #f59e0b;
+      --accent-amber-soft: rgba(245, 158, 11, 0.12);
+      --accent-red: #ef4444;
+      --accent-red-soft: rgba(239, 68, 68, 0.12);
+      --shadow-lg: 0 24px 48px -16px rgba(0, 0, 0, 0.65);
+      --radius-xl: 20px;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --radius-sm: 6px;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+    }
+
+    [data-theme="light"] {
+      --bg-body: #f1f5fb;
+      --bg-surface: #ffffff;
+      --bg-card: #f8fafd;
+      --bg-card-hover: #f1f5f9;
+      --bg-code: #0b1120;
+      --border: #dce4f0;
+      --border-strong: #cbd5e1;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --accent-server: #0284c7;
+      --accent-server-soft: rgba(2, 132, 199, 0.1);
+      --accent-fedora: #7c3aed;
+      --accent-fedora-soft: rgba(124, 58, 237, 0.1);
+      --accent-kiri: #e11d48;
+      --accent-kiri-soft: rgba(225, 29, 72, 0.1);
+      --accent-green: #059669;
+      --accent-green-soft: rgba(5, 150, 105, 0.1);
+      --accent-amber: #d97706;
+      --accent-amber-soft: rgba(217, 119, 6, 0.1);
+      --accent-red: #dc2626;
+      --accent-red-soft: rgba(220, 38, 38, 0.1);
+      --shadow-lg: 0 14px 34px -12px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-body);
+      color: var(--text-primary);
+      line-height: 1.65;
+      font-size: 15px;
+      transition: background-color 0.25s ease, color 0.25s ease;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-body); }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* Sticky Topbar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(14, 21, 37, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+    }
+
+    [data-theme="light"] .topbar { background: rgba(255, 255, 255, 0.92); }
+
+    .topbar-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 15.5px;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, var(--accent-server), var(--accent-fedora), var(--accent-kiri));
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      max-width: 340px;
+      min-width: 210px;
+    }
+
+    .progress-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-server), var(--accent-fedora), var(--accent-green));
+      border-radius: 999px;
+      transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .progress-text {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-green);
+      white-space: nowrap;
+    }
+
+    .toolbar-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-strong);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      font-family: var(--font-sans);
+    }
+
+    .btn:hover { border-color: var(--accent-server); background: var(--bg-card-hover); transform: translateY(-1px); }
+
+    .btn-accent {
+      background: linear-gradient(135deg, var(--accent-server), var(--accent-fedora));
+      border: none;
+      color: #fff;
+    }
+
+    .btn-accent:hover { filter: brightness(1.08); }
+
+    /* Container */
+    .container { max-width: 1320px; margin: 0 auto; padding: 32px 24px 90px; }
+
+    /* Hero */
+    .hero {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 90% 10%, rgba(56, 189, 248, 0.14), transparent 42%),
+        radial-gradient(circle at 10% 90%, rgba(167, 139, 250, 0.14), transparent 42%),
+        radial-gradient(circle at 50% 50%, rgba(251, 113, 133, 0.06), transparent 55%),
+        var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 36px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent-server);
+      background: var(--accent-server-soft);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 5px 13px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+
+    .hero h1 {
+      font-size: clamp(24px, 3.2vw, 35px);
+      font-weight: 800;
+      line-height: 1.22;
+      letter-spacing: -0.025em;
+      margin-bottom: 12px;
+    }
+
+    .hero p {
+      color: var(--text-secondary);
+      max-width: 900px;
+      font-size: 15.5px;
+      margin-bottom: 24px;
+    }
+
+    .specs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .spec-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .spec-card:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+
+    .spec-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .spec-value { font-size: 15.5px; font-weight: 800; color: var(--text-primary); }
+    .spec-sub { font-size: 12.5px; color: var(--text-secondary); margin-top: 3px; }
+
+    /* OS Mode Switcher Banner */
+    .mode-switcher-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 22px 26px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .mode-info h2 { font-size: 16.5px; font-weight: 800; margin-bottom: 4px; }
+    .mode-info p { font-size: 13.5px; color: var(--text-secondary); }
+
+    .mode-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .mode-btn {
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--border-strong);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    .mode-btn:hover { border-color: var(--accent-server); color: var(--text-primary); }
+
+    .mode-btn.active {
+      background: var(--accent-server-soft);
+      border-color: var(--accent-server);
+      color: var(--text-primary);
+      box-shadow: 0 0 0 1px var(--accent-server);
+    }
+
+    .mode-btn small {
+      display: block;
+      font-weight: 500;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* Visual Topology Map */
+    .topology-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 26px;
+      margin-bottom: 24px;
+    }
+
+    .topology-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .topology-header h2 { font-size: 17px; font-weight: 800; }
+
+    .topology-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: stretch;
+      gap: 16px;
+    }
+
+    @media (max-width: 960px) {
+      .topology-grid { grid-template-columns: 1fr; }
+      .tunnel-bridge { flex-direction: row !important; justify-content: center; padding: 12px !important; }
+    }
+
+    .node-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .node-fedora { border-top: 3px solid var(--accent-fedora); }
+    .node-dell { border-top: 3px solid var(--accent-server); }
+
+    .node-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 800;
+      font-size: 15.5px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip-list { display: flex; flex-wrap: wrap; gap: 7px; }
+
+    .chip {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      background: var(--bg-body);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .tunnel-bridge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 10px;
+      text-align: center;
+    }
+
+    .tunnel-pill {
+      background: var(--accent-green-soft);
+      border: 1px dashed var(--accent-green);
+      color: var(--accent-green);
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+    }
+
+    .tunnel-sub { font-size: 11px; color: var(--text-muted); max-width: 155px; }
+
+    /* Customizer Bar */
+    .customizer-bar {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent-fedora);
+      border-radius: var(--radius-lg);
+      padding: 18px 22px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .customizer-info h3 { font-size: 14.5px; font-weight: 800; margin-bottom: 2px; }
+    .customizer-info p { font-size: 13px; color: var(--text-secondary); }
+
+    .customizer-inputs { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+    .input-group { display: flex; flex-direction: column; gap: 4px; }
+    .input-group label {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .input-group input, .input-group select {
+      background: var(--bg-body);
+      border: 1px solid var(--border-strong);
+      color: var(--text-primary);
+      padding: 7px 11px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      width: 150px;
+      outline: none;
+    }
+
+    .input-group input:focus, .input-group select:focus { border-color: var(--accent-fedora); }
+
+    /* Filter & Search */
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tabs { display: flex; gap: 7px; flex-wrap: wrap; }
+
+    .tab-btn {
+      padding: 7px 13px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .tab-btn:hover { border-color: var(--border-strong); color: var(--text-primary); }
+    .tab-btn.active {
+      background: var(--accent-server-soft);
+      border-color: var(--accent-server);
+      color: var(--accent-server);
+    }
+
+    .search-box { position: relative; min-width: 240px; }
+    .search-box input {
+      width: 100%;
+      padding: 8px 14px 8px 34px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      font-size: 13px;
+      outline: none;
+    }
+    .search-box input:focus { border-color: var(--accent-server); }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; }
+
+    /* Architecture & Memory Visualizer */
+    .arch-section {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    @media (max-width: 920px) { .arch-section { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .ram-bar-visual {
+      display: flex;
+      height: 14px;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .ram-seg-os { width: 16%; background: var(--accent-green); }
+    .ram-seg-cache { width: 39%; background: var(--accent-server); }
+    .ram-seg-zram { width: 27%; background: var(--accent-fedora); }
+    .ram-seg-swap { width: 18%; background: var(--accent-amber); }
+
+    .ram-stack { display: flex; flex-direction: column; gap: 10px; }
+
+    .ram-tier {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      background: var(--bg-card);
+    }
+
+    .ram-tier-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      gap: 8px;
+    }
+
+    .ram-tier p { font-size: 12.5px; color: var(--text-secondary); }
+
+    .badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge-server { background: var(--accent-server-soft); color: var(--accent-server); }
+    .badge-green { background: var(--accent-green-soft); color: var(--accent-green); }
+    .badge-amber { background: var(--accent-amber-soft); color: var(--accent-amber); }
+    .badge-red { background: var(--accent-red-soft); color: var(--accent-red); }
+    .badge-fedora { background: var(--accent-fedora-soft); color: var(--accent-fedora); }
+    .badge-kiri { background: var(--accent-kiri-soft); color: var(--accent-kiri); }
+
+    /* Phase Sections */
+    .phase-block {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      margin-bottom: 24px;
+      transition: border-color 0.2s ease;
+    }
+
+    .phase-block:hover { border-color: var(--border-strong); }
+
+    .phase-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .phase-num {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--accent-server);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    .phase-title { font-size: 20px; font-weight: 800; letter-spacing: -0.015em; }
+    .phase-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    /* Step Items */
+    .step-list { display: flex; flex-direction: column; gap: 16px; }
+
+    .step-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      transition: all 0.2s ease;
+    }
+
+    .step-item.completed {
+      border-color: rgba(16, 185, 129, 0.45);
+      background: linear-gradient(to right, rgba(16, 185, 129, 0.05), var(--bg-card));
+    }
+
+    .step-top { display: flex; align-items: flex-start; gap: 14px; }
+
+    .step-checkbox {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      min-width: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--border-strong);
+      background: var(--bg-body);
+      cursor: pointer;
+      margin-top: 2px;
+      position: relative;
+      transition: all 0.15s ease;
+    }
+
+    .step-checkbox:checked { background: var(--accent-green); border-color: var(--accent-green); }
+    .step-checkbox:checked::after {
+      content: "✓";
+      position: absolute;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      left: 4px;
+      top: -1px;
+    }
+
+    .step-content { flex: 1; min-width: 0; }
+
+    .step-title {
+      font-size: 15.5px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .step-item.completed .step-title { text-decoration: line-through; color: var(--text-muted); }
+    .step-desc { font-size: 14px; color: var(--text-secondary); margin-bottom: 10px; }
+
+    .verify-box {
+      font-size: 12.5px;
+      color: var(--accent-green);
+      background: var(--accent-green-soft);
+      border: 1px solid rgba(16, 185, 129, 0.22);
+      padding: 7px 12px;
+      border-radius: var(--radius-sm);
+      margin-top: 10px;
+      display: inline-block;
+    }
+
+    /* Callouts */
+    .callout {
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      margin: 14px 0;
+      font-size: 13.5px;
+      border-left: 4px solid;
+    }
+
+    .callout-warn { background: var(--accent-amber-soft); border-color: var(--accent-amber); }
+    .callout-danger { background: var(--accent-red-soft); border-color: var(--accent-red); }
+    .callout-info { background: var(--accent-server-soft); border-color: var(--accent-server); }
+    .callout-pro { background: var(--accent-fedora-soft); border-color: var(--accent-fedora); }
+    .callout strong { display: block; margin-bottom: 3px; font-size: 14px; }
+
+    /* Code Blocks */
+    .code-wrapper {
+      position: relative;
+      margin-top: 10px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid #1e293b;
+      background: var(--bg-code);
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 14px;
+      background: #0d1422;
+      border-bottom: 1px solid #1e293b;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: #94a3b8;
+    }
+
+    .copy-btn {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+      padding: 3px 10px;
+      border-radius: 5px;
+      font-size: 11.5px;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .copy-btn:hover { background: var(--accent-server); color: #06101d; border-color: var(--accent-server); }
+    .copy-btn.copied { background: var(--accent-green); color: #fff; border-color: var(--accent-green); }
+
+    pre {
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 12.6px;
+      line-height: 1.55;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    code.inline {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      background: rgba(148, 163, 184, 0.14);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--accent-server);
+    }
+
+    kbd {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      background: var(--bg-body);
+      border: 1px solid var(--border-strong);
+      border-bottom-width: 2px;
+      border-radius: 5px;
+      padding: 2px 6px;
+      color: var(--text-primary);
+    }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; margin-top: 10px; border-radius: var(--radius-md); border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+    th {
+      background: var(--bg-card);
+      font-weight: 700;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+    }
+    tr:last-child td { border-bottom: none; }
+
+    /* Tips Grid */
+    .tips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+      gap: 16px;
+    }
+
+    .tip-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 18px;
+    }
+
+    .tip-card h4 { font-size: 14.5px; font-weight: 700; margin-bottom: 6px; }
+    .tip-card p { font-size: 13.5px; color: var(--text-secondary); }
+
+    .hidden { display: none !important; }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky Topbar -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-badge">GUI Homelab Edition</span>
+        <span id="brandTitle">Omarchy GUI (Dell) + Fedora Niri &amp; DMS (Main)</span>
+      </div>
+
+      <div class="progress-wrap" title="Tiến độ hoàn thành các bước">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressBar"></div>
+        </div>
+        <span class="progress-text" id="progressText">0/14 bước (0%)</span>
+      </div>
+
+      <div class="toolbar-actions">
+        <button class="btn btn-accent" id="exportMdBtn" title="Tải về file Markdown đã điền sẵn thông số của bạn">⬇ Xuất Cheat Sheet (.md)</button>
+        <button class="btn" id="themeToggle" title="Chuyển giao diện Sáng / Tối">🌓 Giao diện</button>
+        <button class="btn" id="resetProgress" title="Đặt lại toàn bộ dấu tick">↺ Reset</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-eyebrow" id="heroEyebrow">⚡ Giữ nguyên Omarchy (Hyprland GUI) trên HDD • Không cần cài lại OS • Kết nối Fedora Niri + Kiri</div>
+      <h1 id="heroTitle">Home Server Có Giao Diện Trên Dell i3 Gen 7 &amp; Máy Trạm Fedora Niri</h1>
+      <p id="heroDesc">
+        Tận dụng ngay bản <strong>Omarchy (Arch + Hyprland)</strong> đang có sẵn trên ổ HDD của máy Dell — không cần cài lại hệ điều hành, tinh gọn hiệu ứng nặng để tiết kiệm RAM (4GB RAM + 3GB Zram + 2GB Swap), giữ nguyên giao diện đẹp khi ngồi trước máy Dell và điều khiển từ xa mượt mà từ máy chính <strong>Fedora Workstation (Niri + DankMaterialShell + Kiri)</strong>.
+      </p>
+
+      <div class="specs-grid">
+        <div class="spec-card">
+          <div class="spec-label">Máy Phụ (Home Server Có GUI)</div>
+          <div class="spec-value" id="specServerOs">Omarchy (Hyprland GUI)</div>
+          <div class="spec-sub" id="specServerSub">Có sẵn trên HDD • Tinh gọn dịch vụ nền + Zram 3GB</div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-label">Bảo Toàn Dual-Boot</div>
+          <div class="spec-value">120GB SSD Windows Nguyên Vẹn</div>
+          <div class="spec-sub">Cấm tuyệt đối thao tác lên phân vùng SSD Windows</div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-label">Máy Chính (Niri + DMS + Kiri)</div>
+          <div class="spec-value">Fedora Workstation</div>
+          <div class="spec-sub">Kiri (.kiri.local) • Build image đẩy sang Podman Dell</div>
+        </div>
+        <div class="spec-card">
+          <div class="spec-label">Tự Động Hóa 2 Chiều</div>
+          <div class="spec-value">OpenCode + Auto-Setup Script</div>
+          <div class="spec-sub">1 Master Prompt trên Dell + 1 Script trên Máy Chính</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- OS Mode Switcher -->
+    <section class="mode-switcher-panel">
+      <div class="mode-info">
+        <h2>🎛️ Chọn hệ điều hành có giao diện trên máy Dell</h2>
+        <p>Chuyển đổi tức thì toàn bộ hướng dẫn, Master Prompt OpenCode và file Cheat Sheet theo lựa chọn của bạn:</p>
+      </div>
+      <div class="mode-buttons">
+        <button class="mode-btn active" data-mode="omarchy" id="btnModeOmarchy">
+          🚀 Giữ nguyên Omarchy (Khuyên dùng — Không cài lại)
+          <small>Dùng sẵn Hyprland trên HDD • Tinh gọn RAM • Cài gói qua pacman</small>
+        </button>
+        <button class="mode-btn" data-mode="fedora-gui" id="btnModeFedora">
+          🐧 Fedora Server 45 Netinst + Xfce/Sway GUI
+          <small>Cài mới từ ISO 1.2 GiB • Đồng bộ 100% dnf + SELinux với máy chính</small>
+        </button>
+      </div>
+    </section>
+
+    <!-- Visual System Topology -->
+    <section class="topology-panel">
+      <div class="topology-header">
+        <h2>🗺️ Sơ Đồ Phân Vai &amp; Đồng Bộ Hai Máy</h2>
+        <span class="badge badge-green" id="topoBadge">GUI Sẵn Sàng Trên Cả 2 Máy • Tailscale VPN</span>
+      </div>
+      <div class="topology-grid">
+        <div class="node-box node-fedora">
+          <div class="node-title">
+            <span>🐧 Máy Chính: Fedora Workstation (Niri + DMS)</span>
+            <span class="badge badge-fedora">Dev &amp; Control</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-secondary);">Build image container tốc độ cao trên SSD với Kiri, preview HTTPS và điều khiển server qua phím tắt Niri + DMS Spotlight.</p>
+          <div class="chip-list">
+            <span class="chip">Kiri (.rpm • https://*.kiri.local)</span>
+            <span class="chip">DMS Spotlight (Mod+D → homelab)</span>
+            <span class="chip">Workspace "homelab" (50/50 split)</span>
+            <span class="chip">Ghostty + Brave + Nautilus</span>
+            <span class="chip">~/Cloud (systemd automount)</span>
+            <span class="chip">ship-to-dell + notify-send</span>
+          </div>
+        </div>
+
+        <div class="tunnel-bridge">
+          <div class="tunnel-pill">🔐 Tailscale VPN<br/>100.x.y.z</div>
+          <div class="tunnel-sub">SSH • SSHFS • Rsync<br/>kiri save | podman load</div>
+        </div>
+
+        <div class="node-box node-dell">
+          <div class="node-title">
+            <span id="nodeDellTitle">🖥️ Máy Phụ: Dell i3 Gen 7 (Omarchy Hyprland GUI)</span>
+            <span class="badge badge-server">GUI + Server 24/7</span>
+          </div>
+          <p style="font-size: 13px; color: var(--text-secondary);" id="nodeDellDesc">Giữ nguyên giao diện Hyprland tinh gọn hiệu ứng trên HDD, chạy ngầm Caddy, SFTPGo và Rootless Podman cực nhẹ.</p>
+          <div class="chip-list" id="nodeDellChips">
+            <span class="chip">Hyprland GUI (Tắt blur tiết kiệm RAM)</span>
+            <span class="chip">Caddy v2 (:8080)</span>
+            <span class="chip">SFTPGo Cloud (:8090 / :8091)</span>
+            <span class="chip">Rootless Podman Quadlet</span>
+            <span class="chip">Zram 3GB + MGLRU + BFQ + earlyoom</span>
+            <span class="chip">🔒 120GB SSD Windows (Khóa)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dynamic Variable Customizer -->
+    <section class="customizer-bar">
+      <div class="customizer-info">
+        <h3>⚙️ Cá nhân hóa thông số tự động</h3>
+        <p>Điền User và IP Tailscale của máy Dell — toàn bộ Master Prompt, script tự động hóa trên máy chính và file Cheat Sheet sẽ cập nhật tức thì.</p>
+      </div>
+      <div class="customizer-inputs">
+        <div class="input-group">
+          <label for="cfgUser">User trên máy Dell</label>
+          <input type="text" id="cfgUser" value="vu" placeholder="vd: vu" />
+        </div>
+        <div class="input-group">
+          <label for="cfgIp">IP Tailscale máy Dell</label>
+          <input type="text" id="cfgIp" value="100.85.12.34" placeholder="vd: 100.x.y.z" />
+        </div>
+        <div class="input-group">
+          <label for="cfgTerm">Terminal Niri</label>
+          <select id="cfgTerm">
+            <option value="ghostty" selected>ghostty</option>
+            <option value="foot">foot</option>
+            <option value="alacritty">alacritty</option>
+            <option value="kitty">kitty</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="cfgBrowser">Trình duyệt</label>
+          <select id="cfgBrowser">
+            <option value="brave-browser" selected>brave-browser</option>
+            <option value="firefox">firefox</option>
+            <option value="google-chrome">google-chrome</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter & Search -->
+    <div class="controls-row">
+      <div class="filter-tabs" id="filterTabs">
+        <button class="tab-btn active" data-filter="all">Tất cả (5 giai đoạn)</button>
+        <button class="tab-btn" data-filter="phase1">1. BIOS Dell</button>
+        <button class="tab-btn" data-filter="phase2">2. Chuẩn bị OS &amp; OpenCode</button>
+        <button class="tab-btn" data-filter="phase3">3. OpenCode Server</button>
+        <button class="tab-btn" data-filter="phase4">4. Auto-Setup Máy Chính</button>
+        <button class="tab-btn" data-filter="phase5">5. Vận hành &amp; Phím tắt</button>
+      </div>
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Tìm lệnh, pacman, dnf, kiri, niri..." />
+      </div>
+    </div>
+
+    <!-- RAM & Keybind Overview -->
+    <section class="arch-section">
+      <div class="panel">
+        <div class="panel-title">
+          <span>🧠 Phân Bổ Bộ Nhớ 9GB Khả Dụng Khi Chạy Kèm Giao Diện</span>
+          <span class="badge badge-green">Zram 3GB + Swap 2GB</span>
+        </div>
+        <div class="ram-bar-visual" title="4GB RAM thật + 3GB Zram + 2GB Swapfile">
+          <div class="ram-seg-os" title="Giao diện GUI tinh gọn + Caddy + SFTPGo (~550-750MB)"></div>
+          <div class="ram-seg-cache" title="RAM trống làm Page Cache đọc HDD (~3.2GB)"></div>
+          <div class="ram-seg-zram" title="Zram nén zstd trên RAM (3GB - pri=100)"></div>
+          <div class="ram-seg-swap" title="Swapfile dự phòng trên HDD (2GB - pri=10)"></div>
+        </div>
+        <div class="ram-stack">
+          <div class="ram-tier">
+            <div class="ram-tier-header">
+              <span>Tầng 1: Zram nén trực tiếp trên RAM (3.0 GB)</span>
+              <span class="badge badge-fedora">pri=100 • zstd</span>
+            </div>
+            <p>Nén phần bộ nhớ của giao diện đồ họa khi không thao tác trực tiếp ngay trên RAM, <strong>không ghi xuống ổ HDD</strong>.</p>
+          </div>
+          <div class="ram-tier">
+            <div class="ram-tier-header">
+              <span>Tầng 2: Swapfile dự phòng trên HDD (2.0 GB)</span>
+              <span class="badge badge-amber">pri=10 • Phao cứu sinh</span>
+            </div>
+            <p>Bảo vệ Hyprland/Xfce, SSH, Caddy và SFTPGo không bị sập khi bạn mở trình duyệt hoặc chạy container trên máy Dell.</p>
+          </div>
+          <div class="ram-tier">
+            <div class="ram-tier-header">
+              <span>Nhân Linux: MGLRU + earlyoom + BFQ + Tinh gọn GUI</span>
+              <span class="badge badge-green">Chống đơ đĩa cơ</span>
+            </div>
+            <p>Tắt hiệu ứng blur/shadow nặng trên GPU đời cũ, bật <code class="inline">earlyoom</code> và <code class="inline">bfq</code> để ổ HDD không bao giờ bị treo cứng.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <span>⌨️ Phím Tắt Niri Mới (Khớp 100% Binds Hiện Tại)</span>
+          <span class="badge badge-fedora">Không đè phím Vim/DMS</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Phím tắt</th>
+                <th>Hành động tự động</th>
+                <th>Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><kbd>Mod</kbd> + <kbd>S</kbd></td>
+                <td>Mở <strong>Ghostty SSH</strong> vào server Dell</td>
+                <td>Tự xếp 50% ở workspace <code class="inline">homelab</code></td>
+              </tr>
+              <tr>
+                <td><kbd>Mod</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></td>
+                <td>Nhảy tới workspace <code class="inline">homelab</code></td>
+                <td>Nơi đặt sẵn SSH + Kiri UI</td>
+              </tr>
+              <tr>
+                <td><kbd>Mod</kbd> + <kbd>Alt</kbd> + <kbd>H</kbd></td>
+                <td>Gọi <strong>OpenCode AI</strong> từ xa trên Dell</td>
+                <td>Tự động hóa tác vụ server</td>
+              </tr>
+              <tr>
+                <td><kbd>Mod</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd></td>
+                <td>Đẩy Clipboard vào <code class="inline">~/Cloud/clips/</code></td>
+                <td>Bắn popup thông báo DMS</td>
+              </tr>
+              <tr>
+                <td><kbd>Mod</kbd> + <kbd>D</kbd> → <code class="inline">homelab</code></td>
+                <td>DMS Spotlight (SSH, Cloud, Nhiệt độ)</td>
+                <td>Tích hợp sẵn launcher DMS</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 1 -->
+    <section class="phase-block" data-phase="phase1">
+      <div class="phase-header">
+        <div>
+          <div class="phase-num">Giai đoạn 01 • Phần cứng &amp; BIOS Dell</div>
+          <h2 class="phase-title">Cấu Hình BIOS Dell Inspiron i3 Gen 7 Chạy Bền Bỉ 24/7</h2>
+        </div>
+        <div class="phase-meta">
+          <span class="badge badge-amber">⏱️ ~2 phút thủ công</span>
+          <span class="badge badge-server">Nhấn F2 khi khởi động</span>
+        </div>
+      </div>
+
+      <div class="step-list">
+        <div class="step-item" data-step="step-1">
+          <div class="step-top">
+            <input type="checkbox" class="step-checkbox" id="step-1" />
+            <div class="step-content">
+              <div class="step-title">1.1. Bật tự động khởi động lại khi có điện (AC Recovery)</div>
+              <p class="step-desc">Vào BIOS (<kbd>F2</kbd>) → <strong>Power Management → AC Recovery</strong> → chọn <strong>Power On</strong>. Server tự khởi động lại và chạy toàn bộ dịch vụ sau khi mất điện.</p>
+              <div class="verify-box">✓ Xác minh: Tắt máy, rút sạc rồi cắm lại — laptop tự sáng đèn boot lên là đạt.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item" data-step="step-2">
+          <div class="step-top">
+            <input type="checkbox" class="step-checkbox" id="step-2" />
+            <div class="step-content">
+              <div class="step-title">1.2. Giới hạn sạc pin 50%–75% chống phồng pin</div>
+              <p class="step-desc">Vào <strong>Power Management → Primary Battery Charge Configuration</strong> → chọn <strong>Custom</strong> → đặt <strong>Start Charging = 50%</strong> và <strong>Stop Charging = 75%</strong>.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item" data-step="step-3">
+          <div class="step-top">
+            <input type="checkbox" class="step-checkbox" id="step-3" />
+            <div class="step-content">
+              <div class="step-title">1.3. Kê cao thoát nhiệt &amp; để hé nắp màn hình 3–4 cm</div>
+              <p class="step-desc">Kê cao đuôi máy 1.5–2 cm cho thoáng khe hút gió đáy, để hé nắp màn hình 3–4 cm tránh ủ nhiệt bàn phím. Ưu tiên cắm dây LAN nếu có.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 2 -->
+    <section class="phase-block" data-phase="phase2">
+      <div class="phase-header">
+        <div>
+          <div class="phase-num" id="p2Num">Giai đoạn 02 • Giữ nguyên Omarchy có sẵn &amp; Cài OpenCode</div>
+          <h2 class="phase-title" id="p2Title">Khởi Động Vào Omarchy Trên HDD &amp; Cấp Quyền Cho OpenCode</h2>
+        </div>
+        <div class="phase-meta">
+          <span class="badge badge-red">🛡️ Giữ nguyên 120GB SSD Windows</span>
+          <span class="badge badge-green" id="p2Badge">Không cần cài lại OS</span>
+        </div>
+      </div>
+
+      <div class="callout callout-info" id="p2Callout">
+        <strong>💡 Lợi thế khi giữ nguyên Omarchy có sẵn trên ổ HDD:</strong>
+        Bạn không cần tạo USB cài đặt hay phân vùng lại ổ đĩa. Chỉ cần boot thẳng vào màn hình Hyprland của Omarchy trên máy Dell, mở Terminal (<kbd>Super + Return</kbd>) và chạy 2 lệnh bên dưới để OpenCode tự động tinh gọn hệ thống thành server nhẹ mượt.
+      </div>
+
+      <div class="step-list">
+        <div class="step-item" data-step="step-4">
+          <div class="step-top">
+            <input type="checkbox" class="step-checkbox" id="step-4" />
+            <div class="step-content">
+              <div class="step-title">2.1. Kiểm tra ổ đĩa (xác nhận SSD Windows an toàn) &amp; cài OpenCode</div>
+              <p class="step-desc">Mở Terminal trên giao diện máy Dell và chạy lệnh sau để kiểm tra phân vùng, đồng thời cài đặt <code class="inline">opencode</code>:</p>
+              <div class="code-wrapper">
+                <div class="code-header">
+                  <span>bash — Chạy trong Terminal trên máy Dell</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre>lsblk -o NAME,SIZE,FSTYPE,MOUNTPOINT
+curl -fsSL https://opencode.ai/install | bash
+export PATH="$HOME/.opencode/bin:$PATH" && opencode --version</pre>
+              </div>
+              <div class="verify-box">✓ Xác minh: Điểm gắn "/" nằm trên ổ HDD (~1TB), ổ 120GB SSD Windows không bị chỉnh sửa.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item" data-step="step-5">
+          <div class="step-top">
+            <input type="checkbox" class="step-checkbox" id="step-5" />
+            <div class="step-content">
+              <div class="step-title">2.2. Mở sudo NOPASSWD &amp; cấp toàn quyền cục bộ cho ~/homelab</div>
+              <p class="step-desc">Giúp OpenCode thực thi trơn tru toàn bộ cấu hình tối ưu trong thư mục <code class="inline">~/homelab</code> mà không ngắt hỏi mật khẩu:</p>
+              <div class="code-wrapper">
+                <div class="code-header">
+                  <span>bash — Phân quyền tự động theo project trên máy Dell</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre>echo "$USER ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/99-opencode-nopasswd > /dev/null && sudo chmod 440 /etc/sudoers.d/99-opencode-nopasswd && mkdir -p ~/homelab && cat << 'EOF' > ~/homelab/opencode.json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "*": "allow"
+  }
+}
+EOF</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 3 -->
+    <section class="phase-block" data-phase="phase3">
+      <div class="phase-header">
+        <div>
+          <div class="phase-num">Giai đoạn 03 • Zero-Touch Server &amp; GUI Optimization</div>
+          <h2 class="phase-title" id="p3Title">Chạy OpenCode Tinh Gọn Omarchy GUI &amp; Dựng Sẵn Toàn Bộ Dịch Vụ</h2>
+        </div>
+        <div class="phase-meta">
+          <span class="badge badge-green">🤖 100% Tự động</span>
+          <span class="badge badge-server">Caddy + SFTPGo + Podman + Zram</span>
+        </div>
+      </div>
+
+      <div class="step-list">
+        <div class="step-item" data-step="step-6">
+          <div class="step-top">
+            <input type="checkbox" class="step-checkbox" id="step-6" />
+            <div class="step-content">
+              <div class="step-title">3.1. Mở OpenCode &amp; dán Master Prompt (Tự động cập nhật theo OS bạn chọn)</div>
+              <p class="step-desc">Chạy <code class="inline">cd ~/homelab && opencode</code> trên máy Dell, dán toàn bộ Master Prompt dưới đây rồi nhấn Enter:</p>
+              <div class="code-wrapper">
+                <div class="code-header">
+                  <span id="promptHeader">prompt — Master Prompt tối ưu Omarchy (Arch + Hyprland GUI) làm Home Server</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy Master Prompt</button>
+                </div>
+                <pre id="masterPromptText"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item" data-step="step-7">
+          <div class="step-top">
+            <input type="checkbox" class="step-checkbox" id="step-7" />
+            <div class="step-content">
+              <div class="step-title">3.2. Thu hồi sudo NOPASSWD, xem mật khẩu, nối Tailscale &amp; reboot</div>
+              <p class="step-desc">Xóa quyền <code class="inline">NOPASSWD</code> tạm thời để đảm bảo an toàn cho máy chạy 24/7, xem lại <code class="inline">GUIDE.md</code> rồi khởi động lại:</p>
+              <div class="code-wrapper">
+                <div class="code-header">
+                  <span>bash — Chạy trên máy Dell sau khi OpenCode hoàn tất</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre>sudo rm -f /etc/sudoers.d/99-opencode-nopasswd
+~/homelab/status.sh && cat ~/homelab/GUIDE.md && sudo tailscale up && sudo reboot</pre>
+              </div>
+              <div class="verify-box">✓ Xác minh: Máy Dell khởi động lại vào giao diện đồ họa mượt mà, lưu lại IP Tailscale (100.x.y.z) và mật khẩu SFTPGo trong GUIDE.md.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 4: ONE-SHOT FEDORA WORKSTATION + NIRI + DMS + KIRI AUTOMATION -->
+    <section class="phase-block" data-phase="phase4">
+      <div class="phase-header">
+        <div>
+          <div class="phase-num">Giai đoạn 04 • Tự động hóa 1 chạm trên máy chính Fedora (Niri + DMS + Kiri)</div>
+          <h2 class="phase-title">Chạy Script Tự Động Hóa Toàn Bộ Máy Trạm Fedora</h2>
+        </div>
+        <div class="phase-meta">
+          <span class="badge badge-fedora">⚡ 1 Script Duy Nhất</span>
+          <span class="badge badge-kiri">🔥 Kiri + DMS Spotlight</span>
+        </div>
+      </div>
+
+      <div class="callout callout-pro">
+        <strong>🛡️ An toàn tuyệt đối cho cấu hình Niri + DankMaterialShell hiện tại:</strong>
+        Script bên dưới dùng khối đánh dấu <code class="inline">// --- BEGIN HOMELAB NIRI CONFIG ---</code> ở cuối <code class="inline">~/.config/niri/config.kdl</code> (tự sao lưu <code class="inline">.bak</code>), <strong>không đụng vào thư mục <code class="inline">~/.config/niri/dms/</code></strong>, và dùng các phím tắt trống hoàn toàn (<kbd>Mod+S</kbd>, <kbd>Mod+Shift+S</kbd>, <kbd>Mod+Alt+H</kbd>, <kbd>Mod+Alt+C</kbd>).
+      </div>
+
+      <div class="step-list">
+        <div class="step-item" data-step="step-8">
+          <div class="step-top">
+            <input type="checkbox" class="step-checkbox" id="step-8" />
+            <div class="step-content">
+              <div class="step-title">4.1. Cài Tailscale &amp; Kiri (.rpm) trên máy chính Fedora</div>
+              <p class="step-desc">Cài Tailscale để thông mạng nội bộ và cài Kiri (tải gói <code class="inline">.rpm</code> từ <code class="inline">runkiri.com/releases</code>) làm xưởng build container siêu tốc trên SSD:</p>
+              <div class="code-wrapper">
+                <div class="code-header">
+                  <span>bash — Cài Tailscale &amp; Kiri trên máy chính Fedora</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre>curl -fsSL https://tailscale.com/install.sh | sh
+sudo systemctl enable --now tailscaled && sudo tailscale up
+
+# Sau khi tải file kiri-*.rpm từ runkiri.com/releases:
+sudo dnf install -y ~/Downloads/kiri-*.rpm fuse-sshfs wl-clipboard libnotify</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item" data-step="step-9">
+          <div class="step-top">
+            <input type="checkbox" class="step-checkbox" id="step-9" />
+            <div class="step-content">
+              <div class="step-title">4.2. Chạy Script Tự Động Hóa Toàn Diện (SSH + ~/Cloud + DMS Spotlight + Niri Binds + ship-to-dell)</div>
+              <p class="step-desc">Hãy chắc chắn bạn đã điền đúng <strong>User</strong> và <strong>IP Tailscale</strong> ở thanh phía trên, sau đó copy toàn bộ khối lệnh dưới đây dán vào <strong>Ghostty</strong> trên Fedora (tự động cài tất cả và reload Niri):</p>
+              <div class="code-wrapper">
+                <div class="code-header">
+                  <span>bash — setup-fedora-homelab.sh (Idempotent • Chạy lại nhiều lần không trùng lặp)</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy Auto-Setup Script</button>
+                </div>
+                <pre class="dynamic-cmd">cat << 'EOF' > /tmp/setup-fedora-homelab.sh
+#!/usr/bin/env bash
+set -e
+
+DELL_USER="{{USER}}"
+DELL_IP="{{IP}}"
+TERM_BIN="{{TERM}}"
+BROWSER_BIN="{{BROWSER}}"
+
+echo "🚀 Bắt đầu tự động hóa tích hợp Homelab cho máy chính Fedora (Niri + DMS + Kiri)..."
+
+# 1. Cấu hình SSH Key & Host alias 'homelab'
+mkdir -p ~/.ssh && chmod 700 ~/.ssh
+[ ! -f ~/.ssh/id_ed25519 ] && ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
+echo "🔑 Đang chép SSH Key sang $DELL_USER@$DELL_IP (nhập mật khẩu máy Dell nếu được hỏi lần đầu)..."
+ssh-copy-id -o StrictHostKeyChecking=accept-new "$DELL_USER@$DELL_IP"
+
+touch ~/.ssh/config && chmod 600 ~/.ssh/config
+sed -i '/# --- BEGIN HOMELAB SSH ---/,/# --- END HOMELAB SSH ---/d' ~/.ssh/config
+cat << SSH_EOF >> ~/.ssh/config
+# --- BEGIN HOMELAB SSH ---
+Host homelab
+    HostName $DELL_IP
+    User $DELL_USER
+    ServerAliveInterval 60
+# --- END HOMELAB SSH ---
+SSH_EOF
+
+# 2. Cấu hình Systemd User Automount cho ~/Cloud (tự gắn khi mở, tự ngắt sau 5p rảnh)
+mkdir -p "$HOME/Cloud" "$HOME/.config/systemd/user"
+MNT_UNIT="$(systemd-escape --path --suffix=mount "$HOME/Cloud")"
+AMNT_UNIT="$(systemd-escape --path --suffix=automount "$HOME/Cloud")"
+cat << MNT_EOF > "$HOME/.config/systemd/user/$MNT_UNIT"
+[Unit]
+Description=Dell Homelab 1TB HDD Cloud Storage
+
+[Mount]
+What=$DELL_USER@$DELL_IP:/srv/homelab/cloud-storage
+Where=$HOME/Cloud
+Type=fuse.sshfs
+Options=_netdev,reconnect,ServerAliveInterval=15,ServerAliveCountMax=3,IdentityFile=$HOME/.ssh/id_ed25519,StrictHostKeyChecking=accept-new
+
+[Install]
+WantedBy=default.target
+MNT_EOF
+
+cat << AMNT_EOF > "$HOME/.config/systemd/user/$AMNT_UNIT"
+[Unit]
+Description=Automount Dell Homelab Cloud Storage
+
+[Automount]
+Where=$HOME/Cloud
+TimeoutIdleSec=300
+
+[Install]
+WantedBy=default.target
+AMNT_EOF
+
+systemctl --user daemon-reload
+systemctl --user enable --now "$AMNT_UNIT"
+
+# 3. Tạo script ~/bin/ship-to-dell (Build bằng Kiri SSD -> Bắn sang Podman Dell + DMS Notify)
+mkdir -p "$HOME/bin"
+cat << 'SHIP_EOF' > "$HOME/bin/ship-to-dell"
+#!/usr/bin/env bash
+set -e
+IMAGE_NAME="$1"
+SERVICE_NAME="$2"
+if [ -z "$IMAGE_NAME" ]; then
+  echo "Cách dùng: ship-to-dell <ten-image:tag> [ten-systemd-service]"
+  exit 1
+fi
+echo "🔨 [1/3] Building $IMAGE_NAME bằng Kiri trên Fedora SSD..."
+kiri build -t "$IMAGE_NAME" .
+echo "🚀 [2/3] Streaming image qua Tailscale sang Podman trên máy Dell..."
+kiri save "$IMAGE_NAME" | ssh homelab "podman load"
+if [ -n "$SERVICE_NAME" ]; then
+  echo "🔄 [3/3] Khởi động lại dịch vụ $SERVICE_NAME trên máy Dell..."
+  ssh homelab "systemctl --user restart $SERVICE_NAME"
+fi
+command -v notify-send >/dev/null && notify-send -i system-software-update "Kiri → Dell Server" "Đã deploy thành công $IMAGE_NAME!"
+echo "✅ Hoàn tất!"
+SHIP_EOF
+chmod +x "$HOME/bin/ship-to-dell"
+
+# 4. Tạo 4 lối tắt cho DankMaterialShell Spotlight (Mod+D -> gõ 'homelab')
+mkdir -p "$HOME/.local/share/applications"
+
+cat << D1_EOF > "$HOME/.local/share/applications/homelab-ssh.desktop"
+[Desktop Entry]
+Name=Homelab: SSH Terminal (Dell Server)
+Comment=Mở Ghostty kết nối SSH vào máy Dell
+Exec=$TERM_BIN --title=homelab-ssh -e ssh homelab
+Icon=utilities-terminal
+Type=Application
+Categories=System;
+D1_EOF
+
+cat << D2_EOF > "$HOME/.local/share/applications/homelab-opencode.desktop"
+[Desktop Entry]
+Name=Homelab: OpenCode Remote AI
+Comment=Điều khiển OpenCode tự động hóa trên máy Dell
+Exec=$TERM_BIN --title=homelab-opencode -e ssh -t homelab "cd ~/homelab && opencode"
+Icon=system-run
+Type=Application
+Categories=Development;
+D2_EOF
+
+cat << D3_EOF > "$HOME/.local/share/applications/homelab-cloud.desktop"
+[Desktop Entry]
+Name=Homelab: Cloud Storage (Nautilus & Web)
+Comment=Mở thư mục ~/Cloud và giao diện SFTPGo trên trình duyệt
+Exec=sh -c 'nautilus "$HOME/Cloud" & $BROWSER_BIN "http://$DELL_IP:8090"'
+Icon=folder-remote
+Type=Application
+Categories=Network;
+D3_EOF
+
+cat << D4_EOF > "$HOME/.local/share/applications/homelab-status.desktop"
+[Desktop Entry]
+Name=Homelab: Nhiệt độ & RAM Server
+Comment=Kiểm tra sức khỏe Dell i3 Gen 7 qua thông báo DMS
+Exec=sh -c 'INFO=$(ssh -o ConnectTimeout=2 homelab "awk '\''{printf \"%.0f°C\", \$1/1000}'\'' /sys/class/thermal/thermal_zone0/temp && free -m | awk '\''/Mem:/ {printf \" | RAM: %d/%dMB\", \$3, \$2}'\''" 2>/dev/null || echo "Server Offline"); notify-send -i computer "Dell Homelab Server" "$INFO"'
+Icon=utilities-system-monitor
+Type=Application
+Categories=System;
+D4_EOF
+
+command -v update-desktop-database >/dev/null && update-desktop-database "$HOME/.local/share/applications" || true
+
+# 5. Cập nhật an toàn ~/.config/niri/config.kdl (giữ nguyên dms/*.kdl, không đè phím cũ)
+NIRI_CFG="$HOME/.config/niri/config.kdl"
+if [ -f "$NIRI_CFG" ]; then
+  cp "$NIRI_CFG" "$NIRI_CFG.bak.$(date +%Y%m%d-%H%M%S)"
+  sed -i '/\/\/ --- BEGIN HOMELAB NIRI CONFIG ---/,/\/\/ --- END HOMELAB NIRI CONFIG ---/d' "$NIRI_CFG"
+  cat << KDL_EOF >> "$NIRI_CFG"
+
+// --- BEGIN HOMELAB NIRI CONFIG ---
+workspace "homelab"
+
+window-rule {
+    match title="^homelab-(ssh|opencode)$"
+    open-on-workspace "homelab"
+    default-column-width { proportion 0.5; }
+}
+
+window-rule {
+    match app-id="kiri"
+    open-on-workspace "homelab"
+    default-column-width { proportion 0.5; }
+}
+
+binds {
+    Mod+S hotkey-overlay-title="Homelab: SSH Server" { spawn "$TERM_BIN" "--title=homelab-ssh" "-e" "ssh" "homelab"; }
+    Mod+Shift+S hotkey-overlay-title="Homelab: Focus Workspace" { focus-workspace "homelab"; }
+    Mod+Alt+H hotkey-overlay-title="Homelab: OpenCode Remote" { spawn "$TERM_BIN" "--title=homelab-opencode" "-e" "ssh" "-t" "homelab" "cd ~/homelab && opencode"; }
+    Mod+Alt+C hotkey-overlay-title="Homelab: Save Clipboard to Cloud" { spawn "sh" "-c" "mkdir -p ~/Cloud/clips && wl-paste > ~/Cloud/clips/clip-\$(date +%Y%m%d-%H%M%S).txt && notify-send -i computer 'Homelab Cloud' 'Đã lưu clipboard lên ổ 1TB HDD!'"; }
+}
+// --- END HOMELAB NIRI CONFIG ---
+KDL_EOF
+  niri msg action load-config-file 2>/dev/null || true
+fi
+
+# 6. Kéo bản sao cẩm nang mật khẩu GUIDE.md về máy chính
+scp homelab:~/homelab/GUIDE.md "$HOME/homelab-server-guide.md" 2>/dev/null || true
+
+command -v notify-send >/dev/null && notify-send -i computer "Homelab Auto-Setup" "Hoàn tất tích hợp Dell GUI Server + Niri + DMS + Kiri!"
+echo "🎉 HOÀN TẤT! Nhấn Mod+D (gõ homelab) hoặc Mod+S để bắt đầu."
+EOF
+bash /tmp/setup-fedora-homelab.sh</pre>
+              </div>
+              <div class="verify-box">✓ Xác minh: Bấm <kbd>Mod+S</kbd> mở ngay Ghostty SSH vào Dell; bấm <kbd>Mod+D</kbd> gõ <code class="inline">homelab</code> thấy đủ 4 công cụ trong DMS Spotlight.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 5: DAILY WORKFLOW & BEST PRACTICES -->
+    <section class="phase-block" data-phase="phase5">
+      <div class="phase-header">
+        <div>
+          <div class="phase-num">Giai đoạn 05 • Quy trình vận hành hàng ngày</div>
+          <h2 class="phase-title">Thao Tác Thực Chiến Giữa Hai Máy</h2>
+        </div>
+        <div class="phase-meta">
+          <span class="badge badge-green">Workflow Hàng Ngày</span>
+        </div>
+      </div>
+
+      <div class="step-list" style="margin-bottom: 22px;">
+        <div class="step-item" data-step="step-10">
+          <div class="step-top">
+            <input type="checkbox" class="step-checkbox" id="step-10" />
+            <div class="step-content">
+              <div class="step-title">5.1. Kiểm tra file mật khẩu SFTPGo vừa kéo tự động về máy chính</div>
+              <div class="code-wrapper">
+                <div class="code-header">
+                  <span>bash — Xem tài khoản &amp; mật khẩu SFTPGo trên Fedora</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre>cat ~/homelab-server-guide.md</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item" data-step="step-11">
+          <div class="step-top">
+            <input type="checkbox" class="step-checkbox" id="step-11" />
+            <div class="step-content">
+              <div class="step-title">5.2. Deploy Web PDF Toán–Văn trong 1 giây bằng Rsync</div>
+              <p class="step-desc">Build thư mục <code class="inline">dist/</code> trên máy chính Fedora rồi đồng bộ thẳng lên Caddy (<code class="inline">:8080</code>) trên máy Dell:</p>
+              <div class="code-wrapper">
+                <div class="code-header">
+                  <span>bash — Build &amp; đồng bộ web /home/uyvu/pdf lên Caddy (:8080)</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre>npm run build && rsync -avz --delete ./dist/ homelab:/srv/homelab/www/</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item" data-step="step-12">
+          <div class="step-top">
+            <input type="checkbox" class="step-checkbox" id="step-12" />
+            <div class="step-content">
+              <div class="step-title">5.3. Build Container trên Kiri (SSD Fedora) &amp; đẩy sang Podman (máy Dell)</div>
+              <div class="code-wrapper">
+                <div class="code-header">
+                  <span>bash — Dev tại https://my-app.kiri.local rồi đẩy lên server Dell</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre># 1. Chạy thử local có sẵn HTTPS:
+kiri compose up -d
+
+# 2. Đóng gói trên Fedora SSD và stream sang Podman trên máy Dell:
+ship-to-dell my-app:latest my-app.service</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item" data-step="step-13">
+          <div class="step-top">
+            <input type="checkbox" class="step-checkbox" id="step-13" />
+            <div class="step-content">
+              <div class="step-title">5.4. Mở link HTTPS cố định cho 2 người (Tailscale Serve hoặc Cloudflare Named Tunnel)</div>
+              <p class="step-desc">Trình duyệt yêu cầu <strong>HTTPS cố định</strong> để cài app PWA lên điện thoại và không bị đổi link mỗi lần khởi động lại (chỉ dùng Quick Tunnel khi test tạm):</p>
+              <div class="code-wrapper">
+                <div class="code-header">
+                  <span>bash — Chọn 1 trong 3 cách truy cập từ điện thoại / máy tính</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre># Cách 1 (Khuyên dùng cho 2 người, miễn phí, không cần mua domain):
+# Bật HTTPS tự động nội bộ Tailscale (dùng link https://<ten-may-dell>.<tailnet>.ts.net)
+ssh homelab "sudo tailscale serve --bg 8080"
+
+# Cách 2 (Có tên miền riêng — link cố định chạy ngầm 24/7 cho mọi thiết bị):
+# Tạo Tunnel trên Cloudflare Zero Trust -> copy TOKEN chạy 1 lần:
+ssh homelab "sudo cloudflared service install <CLOUDFLARE_TUNNEL_TOKEN>"
+
+# Cách 3 (Chỉ test nhanh tạm thời — đổi link sau mỗi lần tắt):
+ssh homelab "cloudflared tunnel --url http://127.0.0.1:8080"</pre>
+              </div>
+              <div class="verify-box">✓ Xác minh: Mở link HTTPS trên điện thoại → trình duyệt hiện nút "Cài ứng dụng / Thêm vào màn hình chính" (PWA).</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item" data-step="step-14">
+          <div class="step-top">
+            <input type="checkbox" class="step-checkbox" id="step-14" />
+            <div class="step-content">
+              <div class="step-title">5.5. (Tùy chọn) Chạy Gotenberg LibreOffice trên Dell cho Word Toán có công thức → PDF</div>
+              <p class="step-desc">Chỉ cài khi cần chuyển file <code class="inline">.docx</code> có nhiều công thức MathType/Equation sang PDF chuẩn 100%. Giới hạn RAM <code class="inline">768M</code> an toàn cho máy Dell 4GB:</p>
+              <div class="code-wrapper">
+                <div class="code-header">
+                  <span>bash — Tạo Podman Quadlet cho Gotenberg (chỉ bản LibreOffice, không Chromium)</span>
+                  <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre>ssh homelab 'cat << EOF > ~/.config/containers/systemd/gotenberg.container
+[Unit]
+Description=Gotenberg LibreOffice (Word Toan -> PDF)
+
+[Container]
+Image=docker.io/gotenberg/gotenberg:9-libreoffice
+PublishPort=127.0.0.1:3000:3000
+Memory=768m
+
+[Service]
+Restart=on-failure
+CPUQuota=75%
+
+[Install]
+WantedBy=default.target
+EOF
+systemctl --user daemon-reload && systemctl --user enable --now gotenberg.service'</pre>
+              </div>
+              <div class="verify-box">✓ Xác minh: <code class="inline">ssh homelab "curl -s http://127.0.0.1:3000/health"</code> trả về trạng thái <code class="inline">up</code>.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tips-grid">
+        <div class="tip-card">
+          <h4>🖥️ Đóng bớt app đồ họa trên Dell khi đi vắng</h4>
+          <p>Khi không ngồi trước máy Dell, hãy đóng trình duyệt trên màn hình Dell (chỉ để desktop trống) để nhường toàn bộ ~3.2GB RAM làm bộ nhớ đệm cho ổ HDD.</p>
+        </div>
+        <div class="tip-card">
+          <h4>🔄 Quy tắc cập nhật hệ thống</h4>
+          <p id="tipUpdateText">Trên Omarchy/Arch, chỉ chạy <code class="inline">sudo pacman -Syu</code> 1–2 lần/tháng vào lúc rảnh để giữ ổ HDD yên tĩnh, sau đó kiểm tra lại bằng <code class="inline">~/homelab/status.sh</code>.</p>
+        </div>
+        <div class="tip-card">
+          <h4>🧪 Thử nghiệm rủi ro trên Kiri trước</h4>
+          <p>Dùng <code class="inline">kiri machine create test --distro fedora</code> trên máy chính để test firewall hoặc script mới trước khi áp dụng lên server Dell thật.</p>
+        </div>
+        <div class="tip-card">
+          <h4>🧩 Nâng cấp RAM siêu rẻ về sau</h4>
+          <p>Dell Inspiron Gen 7 thường trống sẵn 1 khe RAM DDR4. Cắm thêm 1 thanh <strong>4GB DDR4 cũ (~150k)</strong> sẽ nâng tổng lên 8GB RAM cực kỳ thoải mái cho cả GUI lẫn container.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      GUI Homelab Blueprint • Omarchy (Hyprland GUI) / Fedora GUI (Dell i3 Gen 7 HDD) + Fedora Workstation (Niri + DankMaterialShell + Kiri)
+    </footer>
+
+  </main>
+
+  <script>
+    // 1. Theme Toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const savedTheme = localStorage.getItem('homelab_gui_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+
+    themeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('homelab_gui_theme', next);
+    });
+
+    // 2. Persistent Checklist & Progress Bar
+    const checkboxes = document.querySelectorAll('.step-checkbox');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const resetBtn = document.getElementById('resetProgress');
+
+    function updateProgress() {
+      const total = checkboxes.length;
+      let checkedCount = 0;
+      checkboxes.forEach(cb => {
+        const item = cb.closest('.step-item');
+        if (cb.checked) {
+          checkedCount++;
+          item.classList.add('completed');
+        } else {
+          item.classList.remove('completed');
+        }
+      });
+      const pct = Math.round((checkedCount / total) * 100);
+      progressBar.style.width = pct + '%';
+      progressText.textContent = `${checkedCount}/${total} bước (${pct}%)`;
+    }
+
+    checkboxes.forEach(cb => {
+      const saved = localStorage.getItem('homelab_gui_' + cb.id);
+      if (saved === 'true') cb.checked = true;
+      cb.addEventListener('change', () => {
+        localStorage.setItem('homelab_gui_' + cb.id, cb.checked);
+        updateProgress();
+      });
+    });
+
+    resetBtn.addEventListener('click', () => {
+      checkboxes.forEach(cb => {
+        cb.checked = false;
+        localStorage.removeItem('homelab_gui_' + cb.id);
+      });
+      updateProgress();
+    });
+
+    updateProgress();
+
+    // 3. OS Mode Templates (Omarchy GUI vs Fedora Server 45 Netinst + Xfce/Sway GUI)
+    const PROMPTS = {
+      omarchy: `Hãy đóng vai Principal Linux Systems Architect chuyên về Arch Linux & Tiling Window Managers (Hyprland / Omarchy). Tôi đang chạy sẵn bản Omarchy (Arch Linux + Hyprland GUI) trên laptop Dell Inspiron Core i3 Gen 7 (2 nhân 4 luồng, 4GB RAM vật lý, cài trên ổ HDD). Laptop này còn có 1 ổ SSD 120GB đang cài sẵn Windows.
+
+MỤC TIÊU: Biến bản Omarchy này thành một Home Server chạy 24/7 cực kỳ nhẹ mượt nhưng VẪN GIỮ NGUYÊN GIAO DIỆN ĐỒ HỌA HYPRLAND để tôi thao tác trực tiếp khi ngồi trước máy Dell, đồng thời CẤU HÌNH SẴN TẤT CẢ (Turnkey) để host web PDF nội bộ và kho tài liệu 1TB.
+
+RÀNG BUỘC AN TOÀN:
+- Tự động thực thi toàn bộ từ đầu đến cuối mà KHÔNG dừng lại hỏi ý kiến tôi.
+- TUYỆT ĐỐI KHÔNG mount, format, resize hay sửa fstab của ổ 120GB SSD chứa Windows.
+- KHÔNG gỡ bỏ Hyprland hay các ứng dụng cơ bản của Omarchy; chỉ tách file tinh gọn hiệu ứng riêng để không bị ghi đè khi Omarchy cập nhật.
+
+Thực hiện tuần tự 4 giai đoạn sau:
+
+1. Tối ưu RAM ảo & Nhân Linux (Zram 3GB + Swapfile 2GB chuẩn Btrfs/ext4 + MGLRU + earlyoom + TCP BBR):
+   - Cài đặt \`zram-generator\` và \`earlyoom\` qua \`pacman -S --noconfirm --needed zram-generator earlyoom\`.
+   - Cấu hình \`/etc/systemd/zram-generator.conf\` với \`[zram0]\`, \`zram-size = 3072\`, \`compression-algorithm = zstd\`, \`swap-priority = 100\` và khởi động \`systemd-zram-setup@zram0.service\`.
+   - Tạo \`/swapfile\` dự phòng 2GB trên HDD (nếu chưa có): kiểm tra filesystem gốc bằng \`findmnt -n -o FSTYPE /\`. Nếu là \`btrfs\` thì chạy \`btrfs filesystem mkswapfile --size 2g --uuid clear /swapfile\`; nếu là \`ext4\` thì chạy \`dd if=/dev/zero of=/swapfile bs=1M count=2048 && chmod 600 /swapfile && mkswap /swapfile\`. Sau đó kích hoạt \`swapon -p 10 /swapfile\` và thêm \`/swapfile none swap defaults,pri=10 0 0\` vào \`/etc/fstab\` (tránh ghi trùng).
+   - Kích hoạt Multi-Gen LRU (MGLRU) qua \`/etc/tmpfiles.d/mglru.conf\` (\`w /sys/kernel/mm/lru_gen/enabled - - - - 7\` và \`w /sys/kernel/mm/lru_gen/min_ttl_ms - - - - 1000\`) rồi chạy \`systemd-tmpfiles --create\`.
+   - Bật \`systemctl enable --now earlyoom\` để chống treo ổ HDD khi tràn RAM.
+   - Tạo \`/etc/sysctl.d/99-server-optimal.conf\` với \`vm.swappiness=100\`, \`vm.vfs_cache_pressure=50\`, \`vm.dirty_background_ratio=5\`, \`vm.dirty_ratio=10\`, \`net.core.default_qdisc=fq\`, \`net.ipv4.tcp_congestion_control=bbr\` và áp dụng bằng \`sysctl --system\`.
+
+2. Tinh gọn Hyprland GUI (không sửa đè file gốc Omarchy), tối ưu ổ HDD & Phần cứng Dell i3 Gen 7:
+   - Tạo file override riêng \`~/.config/hypr/homelab-lite.conf\` chứa \`decoration:blur:enabled = false\` và \`decoration:shadow:enabled = false\`, rồi thêm dòng \`source = ~/.config/hypr/homelab-lite.conf\` vào cuối \`~/.config/hypr/hyprland.conf\` (chỉ thêm nếu chưa tồn tại).
+   - Tạo udev rule \`/etc/udev/rules.d/60-ioschedulers.rules\` ép I/O scheduler \`bfq\` cho ổ đĩa quay (\`ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"\`) rồi reload udev.
+   - Thêm \`noatime\` vào phân vùng \`/\` trong \`/etc/fstab\` (nếu chưa có). Cài \`hdparm\` và tạo systemd service \`hdd-apm.service\` chạy \`hdparm -B 254\` cho thiết bị HDD chứa \`/\` khi khởi động.
+   - Giới hạn log \`systemd-journald\` tại \`/etc/systemd/journald.conf.d/size.conf\` (\`SystemMaxUse=100M\`, \`RuntimeMaxUse=50M\`).
+   - Cài đặt và bật \`thermald\` cho Intel Gen 7. Tạo \`/etc/systemd/logind.conf.d/lid.conf\` đặt \`HandleLidSwitch=ignore\` và \`HandleLidSwitchExternalPower=ignore\`.
+   - Tắt tiết kiệm điện Wi-Fi tại \`/etc/NetworkManager/conf.d/wifi-powersave-off.conf\` (\`[connection]\\nwifi.powersave = 2\`).
+
+3. Cài đặt & Khởi tạo sẵn SFTPGo + Caddy (chuẩn SPA + API) + Podman Rootless + Tường lửa Tailscale:
+   - Cài đặt các gói chính thức qua pacman: \`pacman -S --noconfirm --needed caddy podman crun netavark aardvark-dns btop jq tailscale fuse3 openssh ufw\`.
+   - Cài \`sftpgo\` và \`cloudflared\`: thử qua \`pacman -S --noconfirm --needed\` trước; nếu không có trong official repo thì tự động cài qua \`yay\`/\`paru\` (nếu có) hoặc tải binary/package x86_64 mới nhất từ GitHub Releases (\`drakkan/sftpgo\` và \`cloudflare/cloudflared\`).
+   - Bật \`systemctl enable --now sshd tailscaled\`. Bật tường lửa \`ufw\`: \`ufw default deny incoming\`, \`ufw default allow outgoing\`, \`ufw allow 22/tcp\`, \`ufw allow in on tailscale0\`, \`ufw --force enable\` để cổng web/cloud (:8080, :8090, :8091) tuyệt đối không mở ra Wi-Fi công cộng.
+   - Tạo thư mục \`/srv/homelab/cloud-storage\` (phân quyền \`sftpgo:sftpgo\`, thêm user hiện tại vào nhóm \`sftpgo\` với \`chmod 2775\`), và thư mục web \`/srv/homelab/www\` (kèm file \`index.html\` mẫu). Tạo symlink \`~/homelab/cloud-storage\` và \`~/homelab/www\` trỏ về 2 thư mục này.
+   - Sinh ngẫu nhiên 2 mật khẩu mạnh (16 ký tự chữ và số) cho tài khoản \`admin\` và tài khoản sử dụng \`<USER_PLACEHOLDER>\` trên SFTPGo.
+   - Tạo systemd override \`/etc/systemd/system/sftpgo.service.d/override.conf\` cấu hình SFTPGo lắng nghe Web UI tại \`0.0.0.0:8090\`, WebDAV tại \`0.0.0.0:8091\`, và tự động tạo tài khoản admin (\`SFTPGO_DEFAULT_ADMIN_USERNAME=admin\`, \`SFTPGO_DEFAULT_ADMIN_PASSWORD=<pass_admin>\`). Khởi chạy \`systemctl enable --now sftpgo\`, sau đó gọi REST API nội bộ (\`http://127.0.0.1:8090/api/v2/token\` và \`/api/v2/users\`) để tạo sẵn luôn user \`<USER_PLACEHOLDER>\` với thư mục gốc \`/srv/homelab/cloud-storage\` và mật khẩu \`<pass_user>\`.
+   - Cấu hình \`/etc/caddy/Caddyfile\` phục vụ React SPA tại \`/srv/homelab/www\` trên \`:8080\` với \`encode zstd gzip\`, \`try_files {path} /index.html\`, header \`Cache-Control: public, max-age=31536000, immutable\` cho \`/assets/*\`, security headers (\`X-Content-Type-Options: nosniff\`, \`Referrer-Policy: strict-origin-when-cross-origin\`), và block comment sẵn \`handle /api/* { reverse_proxy 127.0.0.1:3001 }\`. Sau đó bật \`systemctl enable --now caddy\`.
+   - Bật \`loginctl enable-linger $USER\`, tạo thư mục \`~/.config/containers/systemd/\` và viết sẵn file mẫu \`~/homelab/quadlet-template.container\` (\`MemoryMax=128M\`, \`CPUQuota=50%\`).
+
+4. Kiểm tra toàn diện & Xuất cẩm nang sử dụng ngay (\`~/homelab/GUIDE.md\`):
+   - Tạo script \`~/homelab/status.sh\` (\`chmod +x\`) hiển thị nhiệt độ CPU, mức RAM/Zram, trạng thái MGLRU, scheduler HDD, ufw và trạng thái dịch vụ.
+   - Chạy \`~/homelab/status.sh\` và \`ss -tulnp\` để xác nhận mọi cổng (\`22\`, \`8080\`, \`8090\`, \`8091\`) đều hoạt động.
+   - Ghi toàn bộ thông tin vào \`~/homelab/GUIDE.md\` bằng tiếng Việt gồm: Tài khoản & Mật khẩu SFTPGo (\`admin\` và \`<USER_PLACEHOLDER>\`), đường dẫn truy cập Web (\`:8080\`), Cloud Drive (\`:8090\`), lệnh bật HTTPS cố định (\`tailscale serve --bg 8080\`) và Cloudflare Tunnel.`,
+
+      "fedora-gui": `Hãy đóng vai Principal Linux Systems Architect chuyên về Red Hat / Fedora Enterprise Linux. Tôi đang chạy Fedora Server 45 (cài từ Network Install ISO và tích chọn giao diện đồ họa nhẹ Xfce/Sway) trên laptop Dell Inspiron Core i3 Gen 7 (2 nhân 4 luồng, 4GB RAM vật lý, cài trên ổ HDD). Laptop này còn có 1 ổ SSD 120GB đang cài sẵn Windows.
+
+MỤC TIÊU: Xây dựng home server tối ưu nhất (dùng gói RPM chính thức, bảo toàn SELinux và giữ nguyên giao diện đồ họa nhẹ) và CẤU HÌNH SẴN TẤT CẢ (Pre-configured / Turnkey) để host web PDF nội bộ và kho tài liệu 1TB.
+
+RÀNG BUỘC AN TOÀN:
+- Tự động thực thi toàn bộ từ đầu đến cuối mà KHÔNG dừng lại hỏi ý kiến tôi.
+- TUYỆT ĐỐI KHÔNG mount, format, resize hay ghi bất kỳ dữ liệu nào lên ổ 120GB SSD chứa Windows.
+- GIỮ NGUYÊN \`graphical.target\` để máy Dell luôn có màn hình giao diện đồ họa khi tôi cần thao tác trực tiếp.
+
+Thực hiện tuần tự 4 giai đoạn sau:
+
+1. Tối ưu RAM ảo & Nhân Linux (Zram + Swapfile chuẩn Btrfs/ext4 + MGLRU + earlyoom + TCP BBR):
+   - Cấu hình \`/etc/systemd/zram-generator.conf\` với \`[zram0]\`, \`zram-size = 3072\`, \`compression-algorithm = zstd\`, \`swap-priority = 100\` và khởi động lại \`systemd-zram-setup@zram0.service\`.
+   - Tạo \`/swapfile\` dự phòng 2GB trên HDD (nếu chưa có): kiểm tra filesystem gốc bằng \`findmnt -n -o FSTYPE /\`. Nếu là \`btrfs\` thì chạy \`btrfs filesystem mkswapfile --size 2g --uuid clear /swapfile\`; nếu là \`ext4\` thì chạy \`dd if=/dev/zero of=/swapfile bs=1M count=2048 && chmod 600 /swapfile && mkswap /swapfile\`. Kích hoạt \`swapon -p 10 /swapfile\` và thêm \`/swapfile none swap defaults,pri=10 0 0\` vào \`/etc/fstab\` (tránh ghi trùng).
+   - Kích hoạt Multi-Gen LRU (MGLRU) qua \`/etc/tmpfiles.d/mglru.conf\` (\`w /sys/kernel/mm/lru_gen/enabled - - - - 7\` và \`w /sys/kernel/mm/lru_gen/min_ttl_ms - - - - 1000\`) rồi chạy \`systemd-tmpfiles --create\`.
+   - Cài đặt và bật \`earlyoom\` (\`dnf install -y earlyoom && systemctl enable --now earlyoom\`) để chống treo I/O ổ HDD khi tràn RAM.
+   - Tạo \`/etc/sysctl.d/99-server-optimal.conf\` với \`vm.swappiness=100\`, \`vm.vfs_cache_pressure=50\`, \`vm.dirty_background_ratio=5\`, \`vm.dirty_ratio=10\`, \`net.core.default_qdisc=fq\`, \`net.ipv4.tcp_congestion_control=bbr\` và áp dụng bằng \`sysctl --system\`.
+
+2. Tối ưu ổ HDD, phần cứng Dell i3 Gen 7 & Tường lửa \`firewalld\`:
+   - Tạo udev rule \`/etc/udev/rules.d/60-ioschedulers.rules\` ép I/O scheduler \`bfq\` cho ổ đĩa quay (\`ACTION=="add|change", KERNEL=="sd[a-z]*", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"\`) rồi reload udev.
+   - Thêm \`noatime\` vào phân vùng \`/\` trong \`/etc/fstab\` (nếu chưa có). Cài \`hdparm\` và tạo systemd service \`hdd-apm.service\` chạy \`hdparm -B 254\` cho thiết bị HDD chứa \`/\` khi khởi động.
+   - Giới hạn log \`systemd-journald\` tại \`/etc/systemd/journald.conf.d/size.conf\` (\`SystemMaxUse=100M\`, \`RuntimeMaxUse=50M\`).
+   - Cài đặt và bật \`thermald\` cho Intel Gen 7. Tạo \`/etc/systemd/logind.conf.d/lid.conf\` đặt \`HandleLidSwitch=ignore\` và \`HandleLidSwitchExternalPower=ignore\`.
+   - Tắt tiết kiệm điện Wi-Fi tại \`/etc/NetworkManager/conf.d/wifi-powersave-off.conf\` (\`[connection]\\nwifi.powersave = 2\`).
+   - Cấu hình \`firewalld\`: đưa giao diện \`tailscale0\` vào zone \`trusted\` (\`firewall-cmd --permanent --zone=trusted --add-interface=tailscale0\`), xóa dịch vụ \`cockpit\` và \`dhcpv6-client\` khỏi zone \`public\` để chỉ giữ \`ssh\` trên public (mọi cổng web/cloud chỉ mở qua Tailscale), sau đó \`firewall-cmd --reload\`.
+
+3. Cài đặt & Khởi tạo sẵn SFTPGo + Caddy (chuẩn SPA + API) + SELinux + Podman Quadlet:
+   - Cài đặt các gói chính thức qua \`dnf\`: \`caddy\`, \`sftpgo\`, \`podman\`, \`crun\`, \`netavark\`, \`aardvark-dns\`, \`btop\`, \`jq\`, \`policycoreutils-python-utils\` (nếu gói \`sftpgo\` chưa có trong repo mặc định, tự động tải và cài file \`.rpm\` x86_64 mới nhất từ GitHub releases của \`drakkan/sftpgo\`).
+   - Cài đặt \`tailscale\` (qua script chính thức \`https://tailscale.com/install.sh\`) và \`cloudflared\` (từ \`https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-x86_64.rpm\`).
+   - Tạo thư mục \`/srv/homelab/cloud-storage\` (phân quyền \`sftpgo:sftpgo\`, thêm user hiện tại vào nhóm \`sftpgo\` với \`chmod 2775\`), và thư mục web \`/srv/homelab/www\` (kèm file \`index.html\` mẫu). Tạo symlink \`~/homelab/cloud-storage\` và \`~/homelab/www\` trỏ về 2 thư mục này.
+   - Cấu hình SELinux chuẩn xác để không chặn Caddy và SFTPGo: chạy \`semanage fcontext -a -t httpd_sys_content_t "/srv/homelab/www(/.*)?"\` và \`semanage fcontext -a -t public_content_rw_t "/srv/homelab/cloud-storage(/.*)?"\`, sau đó chạy \`restorecon -Rv /srv/homelab\`.
+   - Sinh ngẫu nhiên 2 mật khẩu mạnh (16 ký tự chữ và số) cho tài khoản \`admin\` và tài khoản sử dụng \`<USER_PLACEHOLDER>\` trên SFTPGo.
+   - Tạo systemd override \`/etc/systemd/system/sftpgo.service.d/override.conf\` cấu hình SFTPGo lắng nghe Web UI tại \`0.0.0.0:8090\`, WebDAV tại \`0.0.0.0:8091\`, và tự động tạo tài khoản admin (\`SFTPGO_DEFAULT_ADMIN_USERNAME=admin\`, \`SFTPGO_DEFAULT_ADMIN_PASSWORD=<pass_admin>\`). Khởi chạy \`sftpgo\`, sau đó gọi REST API nội bộ (\`http://127.0.0.1:8090/api/v2/token\` và \`/api/v2/users\`) để tạo sẵn luôn user \`<USER_PLACEHOLDER>\` với thư mục gốc \`/srv/homelab/cloud-storage\` và mật khẩu \`<pass_user>\`.
+   - Cấu hình \`/etc/caddy/Caddyfile\` phục vụ React SPA tại \`/srv/homelab/www\` trên \`:8080\` với \`encode zstd gzip\`, \`try_files {path} /index.html\`, header \`Cache-Control: public, max-age=31536000, immutable\` cho \`/assets/*\`, security headers (\`X-Content-Type-Options: nosniff\`, \`Referrer-Policy: strict-origin-when-cross-origin\`), và block comment sẵn \`handle /api/* { reverse_proxy 127.0.0.1:3001 }\`. Sau đó bật \`systemctl enable --now caddy\`.
+   - Bật \`loginctl enable-linger $USER\`, tạo thư mục \`~/.config/containers/systemd/\` và viết sẵn file mẫu \`~/homelab/quadlet-template.container\` (\`MemoryMax=128M\`, \`CPUQuota=50%\`).
+
+4. Kiểm tra toàn diện & Xuất cẩm nang sử dụng ngay (\`~/homelab/GUIDE.md\`):
+   - Tạo script \`~/homelab/status.sh\` (\`chmod +x\`) hiển thị nhiệt độ CPU, mức RAM/Zram, trạng thái MGLRU, scheduler HDD và trạng thái dịch vụ.
+   - Chạy \`~/homelab/status.sh\` và \`ss -tulnp\` để xác nhận mọi cổng (\`22\`, \`8080\`, \`8090\`, \`8091\`) đều hoạt động.
+   - Ghi toàn bộ thông tin vào \`~/homelab/GUIDE.md\` bằng tiếng Việt gồm: Tài khoản & Mật khẩu SFTPGo (\`admin\` và \`<USER_PLACEHOLDER>\`), đường dẫn truy cập Web (\`:8080\`), Cloud Drive (\`:8090\`), lệnh bật HTTPS cố định (\`tailscale serve --bg 8080\`) và Cloudflare Tunnel.`
+    };
+
+    let currentMode = localStorage.getItem('homelab_gui_mode') || 'omarchy';
+
+    const btnModeOmarchy = document.getElementById('btnModeOmarchy');
+    const btnModeFedora = document.getElementById('btnModeFedora');
+    const masterPromptEl = document.getElementById('masterPromptText');
+
+    function updateModeUI(mode) {
+      currentMode = mode;
+      localStorage.setItem('homelab_gui_mode', mode);
+
+      btnModeOmarchy.classList.toggle('active', mode === 'omarchy');
+      btnModeFedora.classList.toggle('active', mode === 'fedora-gui');
+
+      if (mode === 'omarchy') {
+        document.getElementById('brandTitle').textContent = 'Omarchy GUI (Dell) + Fedora Niri & DMS (Main)';
+        document.getElementById('heroEyebrow').textContent = '⚡ Giữ nguyên Omarchy (Hyprland GUI) trên HDD • Không cần cài lại OS • Kết nối Fedora Niri + Kiri';
+        document.getElementById('heroTitle').textContent = 'Home Server Có Giao Diện Trên Dell i3 Gen 7 & Máy Trạm Fedora Niri';
+        document.getElementById('heroDesc').innerHTML = 'Tận dụng ngay bản <strong>Omarchy (Arch + Hyprland)</strong> đang có sẵn trên ổ HDD của máy Dell — không cần cài lại hệ điều hành, tinh gọn hiệu ứng nặng để tiết kiệm RAM (4GB RAM + 3GB Zram + 2GB Swap), giữ nguyên giao diện đẹp khi ngồi trước máy Dell và điều khiển từ xa mượt mà từ máy chính <strong>Fedora Workstation (Niri + DankMaterialShell + Kiri)</strong>.';
+        document.getElementById('specServerOs').textContent = 'Omarchy (Hyprland GUI)';
+        document.getElementById('specServerSub').textContent = 'Có sẵn trên HDD • Tinh gọn dịch vụ nền + Zram 3GB';
+        document.getElementById('nodeDellTitle').textContent = '🖥️ Máy Phụ: Dell i3 Gen 7 (Omarchy Hyprland GUI)';
+        document.getElementById('nodeDellDesc').textContent = 'Giữ nguyên giao diện Hyprland tinh gọn hiệu ứng trên HDD, chạy ngầm Caddy, SFTPGo và Rootless Podman cực nhẹ.';
+        document.getElementById('nodeDellChips').innerHTML = `
+          <span class="chip">Hyprland GUI (Tắt blur tiết kiệm RAM)</span>
+          <span class="chip">Caddy v2 (:8080)</span>
+          <span class="chip">SFTPGo Cloud (:8090 / :8091)</span>
+          <span class="chip">Rootless Podman Quadlet</span>
+          <span class="chip">Zram 3GB + MGLRU + BFQ + earlyoom</span>
+          <span class="chip">🔒 120GB SSD Windows (Khóa)</span>
+        `;
+        document.getElementById('p2Num').textContent = 'Giai đoạn 02 • Giữ nguyên Omarchy có sẵn & Cài OpenCode';
+        document.getElementById('p2Title').textContent = 'Khởi Động Vào Omarchy Trên HDD & Cấp Quyền Cho OpenCode';
+        document.getElementById('p2Badge').textContent = 'Không cần cài lại OS';
+        document.getElementById('p2Callout').className = 'callout callout-info';
+        document.getElementById('p2Callout').innerHTML = '<strong>💡 Lợi thế khi giữ nguyên Omarchy có sẵn trên ổ HDD:</strong>Bạn không cần tạo USB cài đặt hay phân vùng lại ổ đĩa. Chỉ cần boot thẳng vào màn hình Hyprland của Omarchy trên máy Dell, mở Terminal (<kbd>Super + Return</kbd>) và chạy 2 lệnh bên dưới để OpenCode tự động tinh gọn hệ thống thành server nhẹ mượt.';
+        document.getElementById('p3Title').textContent = 'Chạy OpenCode Tinh Gọn Omarchy GUI & Dựng Sẵn Toàn Bộ Dịch Vụ';
+        document.getElementById('promptHeader').textContent = 'prompt — Master Prompt tối ưu Omarchy (Arch + Hyprland GUI) làm Home Server';
+        document.getElementById('tipUpdateText').innerHTML = 'Trên Omarchy/Arch, chỉ chạy <code class="inline">sudo pacman -Syu</code> 1–2 lần/tháng vào lúc rảnh để giữ ổ HDD yên tĩnh, sau đó kiểm tra lại bằng <code class="inline">~/homelab/status.sh</code>.';
+      } else {
+        document.getElementById('brandTitle').textContent = 'Fedora GUI (Dell) + Fedora Niri & DMS (Main)';
+        document.getElementById('heroEyebrow').textContent = '⚡ Fedora Server 45 Netinst + Xfce/Sway GUI • Đồng bộ 100% dnf + SELinux • Kết nối Fedora Niri + Kiri';
+        document.getElementById('heroTitle').textContent = 'Hệ Sinh Thái Fedora Có Giao Diện Trên Dell & Máy Trạm Fedora Niri';
+        document.getElementById('heroDesc').innerHTML = 'Cài đặt từ bản <strong>Fedora Server 45 Network Install (1.2 GiB)</strong> và tích chọn giao diện nhẹ <strong>Xfce Desktop hoặc Sway</strong> trên ổ HDD — giữ nguyên màn hình đồ họa khi ngồi trước máy Dell, đồng bộ 100% lệnh <code class="inline">dnf</code>, SELinux và Podman với máy chính <strong>Fedora Workstation (Niri + DankMaterialShell + Kiri)</strong>.';
+        document.getElementById('specServerOs').textContent = 'Fedora Server 45 + Xfce/Sway';
+        document.getElementById('specServerSub').textContent = 'Netinst 1.2 GiB • Giao diện nhẹ + Zram 3GB';
+        document.getElementById('nodeDellTitle').textContent = '🖥️ Máy Phụ: Dell i3 Gen 7 (Fedora 45 + Xfce/Sway GUI)';
+        document.getElementById('nodeDellDesc').textContent = 'Chạy giao diện Xfce/Sway nhẹ nhàng trên HDD, bảo toàn SELinux Enforcing, chạy ngầm Caddy, SFTPGo và Rootless Podman.';
+        document.getElementById('nodeDellChips').innerHTML = `
+          <span class="chip">Xfce / Sway GUI (Nhẹ ~500MB RAM)</span>
+          <span class="chip">Caddy v2 (:8080)</span>
+          <span class="chip">SFTPGo Cloud (:8090 / :8091)</span>
+          <span class="chip">Rootless Podman Quadlet + SELinux</span>
+          <span class="chip">Zram 3GB + MGLRU + BFQ + earlyoom</span>
+          <span class="chip">🔒 120GB SSD Windows (Khóa)</span>
+        `;
+        document.getElementById('p2Num').textContent = 'Giai đoạn 02 • Cài Fedora Server 45 Netinst + Xfce/Sway GUI';
+        document.getElementById('p2Title').textContent = 'Cài Fedora Server 45 Netinst (Tích chọn Xfce/Sway) Lên Ổ HDD';
+        document.getElementById('p2Badge').textContent = 'ISO 1.2 GiB + GUI';
+        document.getElementById('p2Callout').className = 'callout callout-danger';
+        document.getElementById('p2Callout').innerHTML = '<strong>⚠️ Quy tắc cài đặt Fedora Server 45 Network Install (1.2 GiB):</strong>1. Kết nối Wi-Fi/LAN ngay màn hình đầu tiên, vào <strong>Software Selection</strong> chọn <strong>Fedora Server Edition</strong> bên trái và tích <strong>Xfce Desktop</strong> (hoặc <strong>Sway Window Manager</strong>) bên phải.<br/>2. Tại <strong>Installation Destination</strong>, chỉ tích chọn ổ <strong>HDD (~1TB)</strong>, tuyệt đối KHÔNG tích vào ổ <strong>120GB SSD Windows</strong>.<br/>3. Khi tạo User, tích chọn <strong>"Make this user administrator"</strong>.';
+        document.getElementById('p3Title').textContent = 'Chạy OpenCode Cấu Hình Toàn Bộ Fedora GUI Server (SELinux + Caddy + SFTPGo)';
+        document.getElementById('promptHeader').textContent = 'prompt — Master Prompt tối ưu Fedora Server 45 (Có Xfce/Sway GUI)';
+        document.getElementById('tipUpdateText').innerHTML = 'Trên Fedora, chỉ chạy <code class="inline">sudo dnf upgrade --refresh -y</code> 1–2 lần/tháng vào lúc rảnh để giữ ổ HDD yên tĩnh, sau đó kiểm tra lại bằng <code class="inline">~/homelab/status.sh</code>.';
+      }
+
+      applyVariables();
+    }
+
+    btnModeOmarchy.addEventListener('click', () => updateModeUI('omarchy'));
+    btnModeFedora.addEventListener('click', () => updateModeUI('fedora-gui'));
+
+    // 4. Dynamic Variable Customizer (User, IP, Terminal, Browser)
+    const cfgUser = document.getElementById('cfgUser');
+    const cfgIp = document.getElementById('cfgIp');
+    const cfgTerm = document.getElementById('cfgTerm');
+    const cfgBrowser = document.getElementById('cfgBrowser');
+    const dynamicCmds = document.querySelectorAll('.dynamic-cmd');
+
+    dynamicCmds.forEach(el => { el.dataset.template = el.textContent; });
+
+    function applyVariables() {
+      const user = cfgUser.value.trim() || 'vu';
+      const ip = cfgIp.value.trim() || '100.85.12.34';
+      const term = cfgTerm.value || 'ghostty';
+      const browser = cfgBrowser.value || 'brave-browser';
+
+      localStorage.setItem('homelab_gui_user', user);
+      localStorage.setItem('homelab_gui_ip', ip);
+      localStorage.setItem('homelab_gui_term', term);
+      localStorage.setItem('homelab_gui_browser', browser);
+
+      dynamicCmds.forEach(el => {
+        el.textContent = el.dataset.template
+          .replace(/\{\{USER\}\}/g, user)
+          .replace(/\{\{IP\}\}/g, ip)
+          .replace(/\{\{TERM\}\}/g, term)
+          .replace(/\{\{BROWSER\}\}/g, browser);
+      });
+
+      const basePrompt = PROMPTS[currentMode] || PROMPTS.omarchy;
+      masterPromptEl.textContent = basePrompt.replace(/<USER_PLACEHOLDER>/g, user);
+    }
+
+    cfgUser.value = localStorage.getItem('homelab_gui_user') || 'vu';
+    cfgIp.value = localStorage.getItem('homelab_gui_ip') || '100.85.12.34';
+    cfgTerm.value = localStorage.getItem('homelab_gui_term') || 'ghostty';
+    cfgBrowser.value = localStorage.getItem('homelab_gui_browser') || 'brave-browser';
+
+    cfgUser.addEventListener('input', applyVariables);
+    cfgIp.addEventListener('input', applyVariables);
+    cfgTerm.addEventListener('change', applyVariables);
+    cfgBrowser.addEventListener('change', applyVariables);
+
+    // Initialize UI
+    updateModeUI(currentMode);
+
+    // 5. Copy to Clipboard
+    function copyCode(btn) {
+      const pre = btn.closest('.code-wrapper').querySelector('pre');
+      navigator.clipboard.writeText(pre.textContent).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = '✓ Đã chép!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = orig;
+          btn.classList.remove('copied');
+        }, 1800);
+      });
+    }
+
+    // 6. Filter Tabs & Live Search
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const phases = document.querySelectorAll('.phase-block');
+    const topologyPanel = document.querySelector('.topology-panel');
+    const archSection = document.querySelector('.arch-section');
+    const searchInput = document.getElementById('searchInput');
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+
+        if (filter === 'all') {
+          topologyPanel.classList.remove('hidden');
+          archSection.classList.remove('hidden');
+          phases.forEach(p => p.classList.remove('hidden'));
+        } else {
+          topologyPanel.classList.add('hidden');
+          archSection.classList.add('hidden');
+          phases.forEach(p => {
+            p.classList.toggle('hidden', p.dataset.phase !== filter);
+          });
+        }
+      });
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const steps = document.querySelectorAll('.step-item');
+      steps.forEach(step => {
+        const text = step.textContent.toLowerCase();
+        step.classList.toggle('hidden', q !== '' && !text.includes(q));
+      });
+    });
+
+    // 7. Export Personalized Markdown Cheat Sheet
+    document.getElementById('exportMdBtn').addEventListener('click', () => {
+      const user = cfgUser.value.trim() || 'vu';
+      const ip = cfgIp.value.trim() || '100.85.12.34';
+      const term = cfgTerm.value || 'ghostty';
+      const browser = cfgBrowser.value || 'brave-browser';
+      const osLabel = currentMode === 'omarchy' ? 'Omarchy (Arch + Hyprland GUI)' : 'Fedora Server 45 + Xfce/Sway GUI';
+
+      const md = `# Cheat Sheet: Homelab Có Giao Diện (${osLabel}) & Fedora Niri + DMS + Kiri
+
+- **OS máy Dell (Server 24/7):** ${osLabel}
+- **User trên máy Dell:** \`${user}\`
+- **IP Tailscale Dell:** \`${ip}\`
+- **App máy chính Fedora:** \`${term}\` / \`${browser}\` / \`nautilus\`
+
+## 1. Phím tắt Niri & DankMaterialShell trên máy chính
+- **Mở Ghostty SSH vào server Dell:** \`Mod + S\`
+- **Nhảy tới workspace \`homelab\`:** \`Mod + Shift + S\`
+- **Gọi OpenCode AI từ xa trên Dell:** \`Mod + Alt + H\`
+- **Lưu nhanh Clipboard lên \`~/Cloud/clips/\`:** \`Mod + Alt + C\`
+- **Mở DMS Spotlight tìm công cụ server:** \`Mod + D\` → gõ \`homelab\`
+
+## 2. Địa chỉ truy cập dịch vụ
+- **Website đang host (Caddy):** http://${ip}:8080
+- **Cloud Drive cá nhân (SFTPGo Web):** http://${ip}:8090
+- **Ổ đĩa mạng cục bộ trên Fedora:** \`~/Cloud\` (tự động mount qua systemd)
+
+## 3. Lệnh thao tác nhanh từ Terminal
+- **Deploy Web PDF Toán–Văn (1 giây):** \`npm run build && rsync -avz --delete ./dist/ homelab:/srv/homelab/www/\`
+- **Bật HTTPS cố định qua Tailscale (cho PWA):** \`ssh homelab "sudo tailscale serve --bg 8080"\`
+- **Build trên Kiri & đẩy sang Dell Podman:** \`ship-to-dell my-app:latest my-app.service\`
+- **Public Web tạm qua Cloudflare:** \`ssh homelab "cloudflared tunnel --url http://127.0.0.1:8080"\`
+`;
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `homelab-gui-cheatsheet-${user}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>

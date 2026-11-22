@@ -53,7 +53,7 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
   }, [])
 
   useEffect(() => {
-    if (incoming.token > lastToken.current && incoming.files.length) {
+    if (incoming.target === 'word' && incoming.token > lastToken.current && incoming.files.length) {
       lastToken.current = incoming.token
       void run(() => acceptFiles(incoming.files), 'Đã chuyển xong. Chọn khoảng trang nếu cần.')
     }
@@ -187,6 +187,10 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
         bytes={previewBytes}
         title="Xem trước PDF từ Word"
         onClose={() => setPreviewOpen(false)}
+        onDownload={() => {
+          if (previewBytes) downloadBytes(previewBytes, name)
+          setPreviewOpen(false)
+        }}
       />
 
       <StatusLine message={message} status={status} />

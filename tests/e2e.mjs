@@ -4,6 +4,7 @@ import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { unzipSync } from 'fflate'
 import { PDFDocument } from 'pdf-lib'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -53,7 +54,7 @@ try {
 
   check('title', (await page.title()).includes('PDF'))
   check('og image', (await page.locator('meta[property="og:image"]').getAttribute('content')).includes('og-image.png'))
-  check('tab count', (await page.getByRole('tab').count()) === 3)
+  check('tab count', (await page.getByRole('tab').count()) === 6)
   check('higher limit chip', await page.getByText('500 MB').first().isVisible())
 
   // Theme toggle + persistence
@@ -131,14 +132,59 @@ try {
   check('custom output filename', presetDownload.suggestedFilename() === 'Báo cáo.pdf', presetDownload.suggestedFilename())
   await page.getByRole('button', { name: 'Tất cả', exact: true }).click()
 
+  // ---------- Split PDF (.zip) ----------
+  await page.getByRole('tab', { name: /Tách PDF/ }).click()
+  await page.locator('#panel-split input[type=file]').first().setInputFiles(fixture('a.pdf'))
+  await page.locator('#panel-split').getByRole('radio', { name: /Mỗi trang 1 file/ }).waitFor({ timeout: 20000 })
+  await page.locator('#panel-split').getByRole('radio', { name: /Mỗi trang 1 file/ }).click()
+  const [splitDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#panel-split').getByRole('button', { name: 'Tách & tải ZIP' }).click(),
+  ])
+  const splitZipPath = join(output, 'split.zip')
+  await splitDownload.saveAs(splitZipPath)
+  const splitEntries = Object.keys(unzipSync(new Uint8Array(readFileSync(splitZipPath))))
+  check('split pdf exports zip with 6 pdfs', splitEntries.length === 6, splitEntries.join(', '))
+
+  // ---------- PDF -> Images (.zip) ----------
+  await page.getByRole('tab', { name: /PDF → Ảnh/ }).click()
+  await page.locator('#panel-pdf2img input[type=file]').first().setInputFiles(fixture('a.pdf'))
+  const imgRange = page.locator('#panel-pdf2img input[type=number]')
+  await imgRange.first().waitFor({ timeout: 20000 })
+  await imgRange.nth(0).fill('1')
+  await imgRange.nth(1).fill('2')
+  const [pdfImgDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#panel-pdf2img').getByRole('button', { name: /Xuất 2 ảnh/ }).click(),
+  ])
+  const pdfImgZipPath = join(output, 'pages.zip')
+  await pdfImgDownload.saveAs(pdfImgZipPath)
+  const imgEntries = Object.keys(unzipSync(new Uint8Array(readFileSync(pdfImgZipPath))))
+  check('pdf to images exports 2 jpgs in zip', imgEntries.length === 2 && imgEntries.every((n) => n.endsWith('.jpg')), imgEntries.join(', '))
+  check('pdf to images renders gallery thumbnails', (await page.locator('#panel-pdf2img img').count()) === 2)
+
+  // ---------- PDF -> Word (Offline mode) ----------
+  await page.getByRole('tab', { name: /PDF → Word/ }).click()
+  await page.locator('#panel-pdf2word input[type=file]').first().setInputFiles(fixture('a.pdf'))
+  await page.locator('#panel-pdf2word').getByRole('radio', { name: /Nhanh trên máy/ }).waitFor({ timeout: 20000 })
+  await page.locator('#panel-pdf2word').getByRole('radio', { name: /Nhanh trên máy/ }).click()
+  const [docxDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#panel-pdf2word').getByRole('button', { name: 'Chuyển sang Word' }).click(),
+  ])
+  const docxPath = join(output, 'converted.docx')
+  await docxDownload.saveAs(docxPath)
+  const docxEntries = Object.keys(unzipSync(new Uint8Array(readFileSync(docxPath))))
+  check('pdf to word offline exports valid docx', docxEntries.includes('word/document.xml'), docxDownload.suggestedFilename())
+
   // PDF dropped on Word tab routes back to PDF tab
-  await page.getByRole('tab', { name: 'Word → PDF' }).click()
+  await page.getByRole('tab', { name: /Word → PDF/ }).click()
   await page.locator('#panel-word input[type=file]').first().setInputFiles(fixture('a.pdf'))
   await page.waitForFunction(() => {
     const panel = document.querySelector('#panel-pdf')
     return panel && !panel.classList.contains('hidden')
   }, null, { timeout: 5000 })
-  check('pdf drops route to PDF tab', (await page.getByRole('tab', { name: 'Cắt & Gộp PDF' }).getAttribute('aria-selected')) === 'true')
+  check('pdf drops route to PDF tab', (await page.getByRole('tab', { name: /Cắt & Gộp PDF/ }).getAttribute('aria-selected')) === 'true')
 
   // Invalid range
   await page.locator('#panel-pdf li input[type=number]').nth(0).fill('99')
@@ -154,8 +200,8 @@ try {
   await page.getByText('Thả file để thêm vào danh sách').waitFor({ timeout: 3000 })
   check('full-window drag overlay appears', true)
 
-  // ---------- Images → PDF ----------
-  await page.getByRole('tab', { name: 'Ảnh → PDF' }).click()
+  // ---------- Images -> PDF ----------
+  await page.getByRole('tab', { name: /Ảnh → PDF/ }).click()
   await page.locator('#panel-image input[type=file]').first().setInputFiles([fixture('photo.png'), fixture('photo.jpg')])
   await page.waitForFunction(() => document.querySelectorAll('#panel-image li').length === 2, null, { timeout: 20000 })
   check('image rows', (await page.locator('#panel-image li').count()) === 2)
@@ -167,16 +213,16 @@ try {
   await imageDownload.saveAs(join(output, 'images.pdf'))
   check('images export 2 pages', (await pagesOf(join(output, 'images.pdf'))) === 2)
 
-  await page.getByRole('button', { name: 'Trang chẵn' }).click()
+  await page.locator('#panel-image').getByRole('button', { name: 'Trang chẵn' }).click()
   const [imageEven] = await Promise.all([
     page.waitForEvent('download'),
     page.getByRole('button', { name: 'Tạo PDF' }).click(),
   ])
   await imageEven.saveAs(join(output, 'images-even.pdf'))
   check('image even preset exports 1 page', (await pagesOf(join(output, 'images-even.pdf'))) === 1)
-  await page.getByRole('button', { name: 'Tất cả', exact: true }).click()
+  await page.locator('#panel-image').getByRole('button', { name: 'Tất cả', exact: true }).click()
 
-  await page.getByRole('button', { name: 'Xem trước' }).click()
+  await page.locator('#panel-image').getByRole('button', { name: 'Xem trước' }).click()
   const imagePreview = page.getByRole('dialog')
   await imagePreview.waitFor({ timeout: 30000 })
   await imagePreview.locator('canvas').first().waitFor()
@@ -200,11 +246,11 @@ try {
   check('no horizontal overflow (empty)', overflow.scroll <= overflow.client, JSON.stringify(overflow))
 
   await mpage.locator('#panel-pdf input[type=file]').first().setInputFiles(fixture('test.docx'))
-  await mpage.getByText('Đã chuyển sang tab Word → PDF').waitFor({ timeout: 3000 })
-  check('auto switches to Word tab', (await mpage.getByRole('tab', { name: 'Word → PDF' }).getAttribute('aria-selected')) === 'true')
-  check('dropzone inputMode numeric on Word panel', (await mpage.locator('#panel-word input[type=number]').first().getAttribute('inputmode')) === 'numeric')
+  await mpage.getByText('Đã chuyển sang Word → PDF').waitFor({ timeout: 3000 })
+  check('auto switches to Word tab', (await mpage.getByRole('tab', { name: /Word → PDF/ }).getAttribute('aria-selected')) === 'true')
 
   await mpage.waitForFunction(() => document.querySelector('#panel-word input[type=number]') !== null, null, { timeout: 60000 })
+  check('dropzone inputMode numeric on Word panel', (await mpage.locator('#panel-word input[type=number]').first().getAttribute('inputmode')) === 'numeric')
   await mpage.locator('#panel-word input[type=number]').first().fill('1')
   await mpage.locator('#panel-word input[type=number]').nth(1).fill('1')
   const [wordDownload] = await Promise.all([
@@ -214,7 +260,7 @@ try {
   await wordDownload.saveAs(join(output, 'word.pdf'))
   check('word crop to 1 page', (await pagesOf(join(output, 'word.pdf'))) === 1)
 
-  await mpage.getByRole('tab', { name: 'Cắt & Gộp PDF' }).click()
+  await mpage.getByRole('tab', { name: /Cắt & Gộp PDF/ }).click()
   await mpage.locator('#panel-pdf input[type=file]').first().setInputFiles(fixture('a.pdf'))
   await mpage.waitForFunction(() => document.querySelectorAll('#panel-pdf li').length === 1, null, { timeout: 20000 })
 

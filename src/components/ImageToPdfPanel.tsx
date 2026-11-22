@@ -45,7 +45,7 @@ export function ImageToPdfPanel({ incoming, onFiles, active, exportRef }: Props)
   }, [items.length])
 
   useEffect(() => {
-    if (incoming.token > lastToken.current && incoming.files.length) {
+    if (incoming.target === 'image' && incoming.token > lastToken.current && incoming.files.length) {
       lastToken.current = incoming.token
       void run(() => acceptFiles(incoming.files), `Đã thêm ${incoming.files.length} ảnh.`)
     }
@@ -115,9 +115,9 @@ export function ImageToPdfPanel({ incoming, onFiles, active, exportRef }: Props)
       <h2 className="sr-only">Ảnh sang PDF</h2>
 
       <Dropzone
-        accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
         multiple
-        title="Kéo ảnh JPG / PNG vào đây"
+        title="Kéo ảnh JPG / PNG / WebP vào đây"
         hint="hoặc bấm để chọn · mỗi ảnh thành một trang A4"
         onFiles={onFiles}
         busy={status === 'running'}

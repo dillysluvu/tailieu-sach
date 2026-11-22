@@ -30,3 +30,4 @@ dist-ssr
 coverage/
 *.tsbuildinfo
 .env*
+!.env.example

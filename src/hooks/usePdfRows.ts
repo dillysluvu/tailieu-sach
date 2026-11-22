@@ -57,12 +57,15 @@ export function usePdfRows() {
   }, [])
 
   const removeRow = useCallback((id: string) => {
-    const target = rows.find((row) => row.id === id)
-    setRows((previous) => previous.filter((row) => row.id !== id))
-    if (target && !rows.some((row) => row.id !== id && row.fileId === target.fileId)) {
-      cache.current.delete(target.fileId)
-    }
-  }, [rows])
+    setRows((previous) => {
+      const target = previous.find((row) => row.id === id)
+      const next = previous.filter((row) => row.id !== id)
+      if (target && !next.some((row) => row.fileId === target.fileId)) {
+        cache.current.delete(target.fileId)
+      }
+      return next
+    })
+  }, [])
 
   const moveRow = useCallback((id: string, direction: -1 | 1) => {
     setRows((previous) => {

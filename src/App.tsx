@@ -3,6 +3,9 @@ import { AnimatePresence, m, useReducedMotion } from 'motion/react'
 import { DragOverlay } from './components/DragOverlay'
 import { ImageToPdfPanel } from './components/ImageToPdfPanel'
 import { PdfMergerPanel } from './components/PdfMergerPanel'
+import { PdfToImagesPanel } from './components/PdfToImagesPanel'
+import { PdfToWordPanel } from './components/PdfToWordPanel'
+import { SplitPdfPanel } from './components/SplitPdfPanel'
 import { Tabs } from './components/Tabs'
 import { ThemeToggle } from './components/ThemeToggle'
 import { WordPanel } from './components/WordPanel'
@@ -12,9 +15,11 @@ import { useTheme } from './hooks/useTheme'
 import { isDocxFile, isImageFile, isPdfFile } from './lib/errors'
 import type { IncomingFiles, TabKey } from './types'
 
+const PDF_TABS: ReadonlySet<TabKey> = new Set(['pdf', 'split', 'pdf2img', 'pdf2word'])
+
 export default function App() {
   const [tab, setTab] = useState<TabKey>('pdf')
-  const [incoming, setIncoming] = useState<IncomingFiles>({ files: [], token: 0 })
+  const [incoming, setIncoming] = useState<IncomingFiles>({ files: [], token: 0, target: 'pdf' })
   const [notice, setNotice] = useState('')
   const sequence = useRef(0)
   const exportRef = useRef<(() => void) | null>(null) as ExportRef
@@ -36,53 +41,61 @@ export default function App() {
     const images = files.filter(isImageFile)
 
     if (images.length && (pdfs.length || docs.length)) {
-      setTab('image')
-      setNotice('Đã bỏ qua file PDF/Word — kéo riêng từng loại')
-      setIncoming({ files: images, token: ++sequence.current })
+      const target: TabKey = tab === 'pdf2word' ? 'pdf2word' : 'image'
+      setTab(target)
+      setNotice('Đã bỏ qua file khác loại — kéo riêng từng loại nhé')
+      setIncoming({ files: images, token: ++sequence.current, target })
       return
     }
 
     if (images.length) {
+      if (tab === 'pdf2word') {
+        setNotice('')
+        setIncoming({ files: images, token: ++sequence.current, target: 'pdf2word' })
+        return
+      }
       if (tab !== 'image') {
         setTab('image')
-        setNotice('Đã chuyển sang tab Ảnh → PDF')
+        setNotice('Đã chuyển sang Ảnh → PDF')
       } else {
         setNotice('')
       }
-      setIncoming({ files: images, token: ++sequence.current })
+      setIncoming({ files: images, token: ++sequence.current, target: 'image' })
       return
     }
 
     if (docs.length && !pdfs.length) {
       if (tab !== 'word') {
         setTab('word')
-        setNotice('Đã chuyển sang tab Word → PDF')
+        setNotice('Đã chuyển sang Word → PDF')
       } else {
         setNotice('')
       }
-      setIncoming({ files: docs, token: ++sequence.current })
+      setIncoming({ files: docs, token: ++sequence.current, target: 'word' })
       return
     }
 
     if (pdfs.length && !docs.length) {
-      if (tab !== 'pdf') {
-        setTab('pdf')
-        setNotice('Đã chuyển sang tab Cắt & Gộp PDF')
+      const target: TabKey = PDF_TABS.has(tab) ? tab : 'pdf'
+      if (target !== tab) {
+        setTab(target)
+        setNotice('Đã chuyển sang Cắt & Gộp PDF')
       } else {
         setNotice('')
       }
-      setIncoming({ files: pdfs, token: ++sequence.current })
+      setIncoming({ files: pdfs, token: ++sequence.current, target })
       return
     }
 
     if (pdfs.length && docs.length) {
-      setTab('pdf')
-      setNotice('Đã bỏ qua file .docx — hãy kéo riêng vào tab Word')
-      setIncoming({ files: pdfs, token: ++sequence.current })
+      const target: TabKey = PDF_TABS.has(tab) ? tab : 'pdf'
+      setTab(target)
+      setNotice('Đã bỏ qua file .docx — hãy kéo riêng vào mục Word → PDF')
+      setIncoming({ files: pdfs, token: ++sequence.current, target })
       return
     }
 
-    setNotice('Chỉ hỗ trợ file .pdf và .docx')
+    setNotice('Chỉ hỗ trợ file PDF, Word (.docx) hoặc ảnh (JPG, PNG, WebP)')
   }
 
   const dragging = useGlobalDrag(handleFiles)
@@ -90,15 +103,18 @@ export default function App() {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 pb-32 pt-5 sm:px-8 sm:pt-7 md:max-w-3xl md:pb-12">
       <header className="sticky top-0 z-20 -mx-4 flex items-center justify-between border-b border-line/70 bg-bg/80 px-4 py-3 backdrop-blur-xl sm:-mx-8 sm:px-8">
-        <span aria-hidden="true" className="relative inline-block h-4 w-4 rounded-[5px] bg-text">
-          <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-accent" />
-        </span>
+        <div className="flex items-center gap-2.5">
+          <span aria-hidden="true" className="relative inline-block h-4 w-4 rounded-[5px] bg-text">
+            <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-accent" />
+          </span>
+          <span className="text-[13px] font-semibold tracking-[-0.01em] text-text">Tài liệu PDF</span>
+        </div>
         <ThemeToggle preference={preference} onCycle={cycle} />
       </header>
 
-      <h1 className="sr-only">Cắt &amp; gộp PDF, Word sang PDF, ảnh sang PDF</h1>
+      <h1 className="sr-only">Cắt gộp PDF, tách file, xuất ảnh, chuyển PDF và Word</h1>
 
-      <div className="mt-6 sm:mt-7">
+      <div className="mt-5 sm:mt-6">
         <Tabs active={tab} onChange={setTab} />
       </div>
 
@@ -120,6 +136,15 @@ export default function App() {
       <div className="mt-6 flex-1">
         <div id="panel-pdf" role="tabpanel" aria-labelledby="tab-pdf" className={tab === 'pdf' ? '' : 'hidden'}>
           <PdfMergerPanel incoming={incoming} onFiles={handleFiles} active={tab === 'pdf'} exportRef={exportRef} />
+        </div>
+        <div id="panel-split" role="tabpanel" aria-labelledby="tab-split" className={tab === 'split' ? '' : 'hidden'}>
+          <SplitPdfPanel incoming={incoming} onFiles={handleFiles} active={tab === 'split'} exportRef={exportRef} />
+        </div>
+        <div id="panel-pdf2img" role="tabpanel" aria-labelledby="tab-pdf2img" className={tab === 'pdf2img' ? '' : 'hidden'}>
+          <PdfToImagesPanel incoming={incoming} onFiles={handleFiles} active={tab === 'pdf2img'} exportRef={exportRef} />
+        </div>
+        <div id="panel-pdf2word" role="tabpanel" aria-labelledby="tab-pdf2word" className={tab === 'pdf2word' ? '' : 'hidden'}>
+          <PdfToWordPanel incoming={incoming} onFiles={handleFiles} active={tab === 'pdf2word'} exportRef={exportRef} />
         </div>
         <div id="panel-word" role="tabpanel" aria-labelledby="tab-word" className={tab === 'word' ? '' : 'hidden'}>
           <WordPanel incoming={incoming} onFiles={handleFiles} active={tab === 'word'} exportRef={exportRef} />

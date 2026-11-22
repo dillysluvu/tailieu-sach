@@ -1,4 +1,4 @@
-export type TabKey = 'pdf' | 'word' | 'image'
+export type TabKey = 'pdf' | 'split' | 'pdf2img' | 'pdf2word' | 'word' | 'image'
 
 export type TaskStatus = 'idle' | 'running' | 'done' | 'error'
 
@@ -18,4 +18,5 @@ export type PdfRow = {
 export type IncomingFiles = {
   files: File[]
   token: number
+  target: TabKey
 }

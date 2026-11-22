@@ -15,9 +15,18 @@ export function Dropzone({ accept, multiple, title, hint, onFiles, busy = false 
   const input = useRef<HTMLInputElement>(null)
   const [over, setOver] = useState(false)
   const reduce = useReducedMotion()
-  const chips = accept.includes('pdf')
-    ? ['PDF', fileSizeLabel, `${LIMITS.maxFilesPerDrop} file / lần`]
-    : ['DOCX', fileSizeLabel]
+  const hasPdf = accept.includes('pdf')
+  const hasImage = accept.includes('image')
+  const chips =
+    hasPdf && hasImage
+      ? ['PDF · Ảnh chụp sách', fileSizeLabel]
+      : hasPdf
+        ? multiple
+          ? ['PDF', fileSizeLabel, `${LIMITS.maxFilesPerDrop} file / lần`]
+          : ['PDF', fileSizeLabel]
+        : hasImage
+          ? ['JPG · PNG · WebP', fileSizeLabel, `${LIMITS.maxFilesPerDrop} ảnh / lần`]
+          : ['DOCX', fileSizeLabel]
 
   return (
     <m.div

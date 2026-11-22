@@ -37,7 +37,7 @@ export function PdfMergerPanel({ incoming, onFiles, active, exportRef }: Props) 
   const outputCache = useRef<{ key: string; bytes: Uint8Array } | null>(null)
 
   useEffect(() => {
-    if (incoming.token > lastToken.current && incoming.files.length) {
+    if (incoming.target === 'pdf' && incoming.token > lastToken.current && incoming.files.length) {
       lastToken.current = incoming.token
       void run(() => addFiles(incoming.files), `Đã thêm ${incoming.files.length} file.`)
     }
