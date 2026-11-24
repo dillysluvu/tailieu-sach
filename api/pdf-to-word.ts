@@ -48,6 +48,7 @@ async function readJsonBody(req: IncomingMessage & { body?: unknown }): Promise<
 function sendJson(res: ServerResponse, status: number, payload: Record<string, unknown>) {
   res.statusCode = status
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  res.setHeader('Cache-Control', 'no-store')
   res.end(JSON.stringify(payload))
 }
 
@@ -102,7 +103,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
   }
 
   const subject = body.subject && body.subject in PROMPTS ? body.subject : 'general'
-  const model = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash'
+  const model = process.env.GEMINI_MODEL?.trim() || 'gemini-3.8-flash'
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`
 
   const parts: Array<Record<string, unknown>> = [{ text: PROMPTS[subject] }]
