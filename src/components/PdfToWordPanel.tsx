@@ -7,8 +7,11 @@ import { outputName } from '../lib/exportOptions'
 import { getPdfPageCount } from '../lib/pdf'
 import { rangeIssue } from '../lib/parse'
 import {
+  checkAiServerStatus,
   convertOfflineToDocx,
   convertWithAi,
+  markdownToDocxBytes,
+  type AiServerStatus,
   type ConvertMode,
   type PdfToWordResult,
   type SubjectPreset,
@@ -34,6 +37,8 @@ const SUBJECTS: Array<{ value: SubjectPreset; label: string; hint: string }> = [
 ]
 
 const PIN_KEY = 'ts-ai-pin'
+const GEMINI_KEY_STORAGE = 'ts-gemini-key'
+const DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
 export function PdfToWordPanel({ incoming, onFiles, active, exportRef }: Props) {
   const [pdfFile, setPdfFile] = useState<File | null>(null)
@@ -43,8 +48,10 @@ export function PdfToWordPanel({ incoming, onFiles, active, exportRef }: Props) 
   const [from, setFrom] = useState(1)
   const [to, setTo] = useState(1)
   const [mode, setMode] = useState<ConvertMode>('ai')
+  const [modeTouched, setModeTouched] = useState(false)
   const [subject, setSubject] = useState<SubjectPreset>('math')
   const [filename, setFilename] = useState('')
+  const [aiStatus, setAiStatus] = useState<AiServerStatus>({ aiConfigured: false, pinRequired: false })
   const [pin, setPin] = useState(() => {
     try {
       return localStorage.getItem(PIN_KEY) ?? ''
@@ -52,56 +59,86 @@ export function PdfToWordPanel({ incoming, onFiles, active, exportRef }: Props) 
       return ''
     }
   })
-  const [showPin, setShowPin] = useState(false)
+  const [geminiKey, setGeminiKey] = useState(() => {
+    try {
+      return localStorage.getItem(GEMINI_KEY_STORAGE) ?? ''
+    } catch {
+      return ''
+    }
+  })
+  const [showKeyBox, setShowKeyBox] = useState(false)
   const [result, setResult] = useState<PdfToWordResult | null>(null)
+  const [editedMarkdown, setEditedMarkdown] = useState('')
   const [copied, setCopied] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
   const lastToken = useRef(0)
   const { status, message, run, reset, setMessage } = useAsyncTask()
 
-  const acceptFiles = useCallback(async (files: File[]) => {
-    const pdfs = files.filter(isPdfFile)
-    const images = files.filter(isImageFile)
-
-    if (pdfs.length) {
-      if (pdfs.length > 1) throw new Error('Chọn một file PDF mỗi lần.')
-      if (pdfs[0].size > LIMITS.maxFileBytes) throw new Error(sizeError(pdfs[0]))
-      const raw = new Uint8Array(await pdfs[0].arrayBuffer())
-      const count = await getPdfPageCount(raw)
-      if (count === 0) throw new Error(`"${pdfs[0].name}" không có trang nào.`)
-
-      setImageFiles([])
-      setPdfFile(pdfs[0])
-      setPdfBytes(raw)
-      setPageCount(count)
-      setFrom(1)
-      setTo(Math.min(count, 10))
-      setFilename(pdfs[0].name.replace(/\.pdf$/i, ''))
-      setResult(null)
-      return
+  useEffect(() => {
+    let cancelled = false
+    void checkAiServerStatus().then((next) => {
+      if (cancelled) return
+      setAiStatus(next)
+      if (!next.aiConfigured && !geminiKey.trim() && !modeTouched && !imageFiles.length) {
+        setMode('offline')
+      }
+    })
+    return () => {
+      cancelled = true
     }
+  }, [geminiKey, imageFiles.length, modeTouched])
 
-    if (images.length) {
-      if (images.length > 10) throw new Error('Chế độ ảnh chụp sách hỗ trợ tối đa 10 ảnh mỗi lần.')
-      const oversized = images.find((img) => img.size > LIMITS.maxFileBytes)
-      if (oversized) throw new Error(sizeError(oversized))
-      setPdfFile(null)
-      setPdfBytes(null)
-      setPageCount(images.length)
-      setImageFiles(images)
-      setMode('ai')
-      setFilename(images[0].name.replace(/\.(jpe?g|png|webp)$/i, ''))
-      setResult(null)
-      return
-    }
+  const acceptFiles = useCallback(
+    async (files: File[]) => {
+      const pdfs = files.filter(isPdfFile)
+      const images = files.filter(isImageFile)
 
-    throw new Error('Hãy chọn file PDF hoặc ảnh chụp trang sách (JPG, PNG, WebP).')
-  }, [])
+      if (pdfs.length) {
+        if (pdfs.length > 1) throw new Error('Chọn một file PDF mỗi lần.')
+        if (pdfs[0].size > LIMITS.maxFileBytes) throw new Error(sizeError(pdfs[0]))
+        const raw = new Uint8Array(await pdfs[0].arrayBuffer())
+        const count = await getPdfPageCount(raw)
+        if (count === 0) throw new Error(`"${pdfs[0].name}" không có trang nào.`)
+
+        setImageFiles([])
+        setPdfFile(pdfs[0])
+        setPdfBytes(raw)
+        setPageCount(count)
+        setFrom(1)
+        setTo(Math.min(count, 10))
+        setFilename(pdfs[0].name.replace(/\.pdf$/i, ''))
+        setResult(null)
+        setEditedMarkdown('')
+        if (!modeTouched) {
+          setMode(aiStatus.aiConfigured || geminiKey.trim() ? 'ai' : 'offline')
+        }
+        return
+      }
+
+      if (images.length) {
+        if (images.length > 10) throw new Error('Chế độ ảnh chụp sách hỗ trợ tối đa 10 ảnh mỗi lần.')
+        const oversized = images.find((img) => img.size > LIMITS.maxFileBytes)
+        if (oversized) throw new Error(sizeError(oversized))
+        setPdfFile(null)
+        setPdfBytes(null)
+        setPageCount(images.length)
+        setImageFiles(images)
+        setMode('ai')
+        setFilename(images[0].name.replace(/\.(jpe?g|png|webp)$/i, ''))
+        setResult(null)
+        setEditedMarkdown('')
+        return
+      }
+
+      throw new Error('Hãy chọn file PDF hoặc ảnh chụp trang sách (JPG, PNG, WebP).')
+    },
+    [aiStatus.aiConfigured, geminiKey, modeTouched],
+  )
 
   useEffect(() => {
     if (incoming.target === 'pdf2word' && incoming.token > lastToken.current && incoming.files.length) {
       lastToken.current = incoming.token
-      void run(() => acceptFiles(incoming.files), 'Đã nạp tài liệu. Chọn môn học và bấm Chuyển sang Word.')
+      void run(() => acceptFiles(incoming.files), 'Đã nạp tài liệu. Chọn chế độ và bấm Chuyển sang Word.')
     }
   }, [incoming, acceptFiles, run])
 
@@ -128,6 +165,16 @@ export function PdfToWordPanel({ incoming, onFiles, active, exportRef }: Props) 
     }
   }
 
+  const handleGeminiKeyChange = (next: string) => {
+    setGeminiKey(next)
+    try {
+      if (next.trim()) localStorage.setItem(GEMINI_KEY_STORAGE, next.trim())
+      else localStorage.removeItem(GEMINI_KEY_STORAGE)
+    } catch {
+      /* bỏ qua nếu trình duyệt chặn localStorage */
+    }
+  }
+
   const handleConvert = useCallback(() => {
     void run(async () => {
       if (!hasSource) throw new Error('Hãy kéo file PDF hoặc ảnh chụp bài tập vào trước.')
@@ -142,18 +189,44 @@ export function PdfToWordPanel({ incoming, onFiles, active, exportRef }: Props) 
               pages,
               subject,
               pin: pin.trim(),
+              geminiKey: geminiKey.trim() || undefined,
               onProgress: setMessage,
             })
           : await convertOfflineToDocx(pdfBytes!, pages, setMessage)
 
       setResult(converted)
-      downloadBytes(
-        converted.docxBytes,
-        outName,
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      )
+      setEditedMarkdown(converted.markdown)
+      downloadBytes(converted.docxBytes, outName, DOCX_MIME)
     }, 'Đã chuyển sang Word (.docx) và tải xuống!')
-  }, [hasSource, imageFiles, isPhotoSource, issue, mode, outName, pages, pdfBytes, pin, run, setMessage, subject, tooManyAiPages])
+  }, [
+    geminiKey,
+    hasSource,
+    imageFiles,
+    isPhotoSource,
+    issue,
+    mode,
+    outName,
+    pages,
+    pdfBytes,
+    pin,
+    run,
+    setMessage,
+    subject,
+    tooManyAiPages,
+  ])
+
+  const handleDownloadEdited = () => {
+    if (!result) return
+    if (editedMarkdown === result.markdown) {
+      downloadBytes(result.docxBytes, outName, DOCX_MIME)
+      return
+    }
+    void run(async () => {
+      const updated = await markdownToDocxBytes(editedMarkdown)
+      setResult({ ...result, markdown: editedMarkdown, docxBytes: updated })
+      downloadBytes(updated, outName, DOCX_MIME)
+    }, 'Đã cập nhật nội dung và tải lại file Word (.docx)!')
+  }
 
   useEffect(() => {
     if (!active) return
@@ -170,15 +243,18 @@ export function PdfToWordPanel({ incoming, onFiles, active, exportRef }: Props) 
     setImageFiles([])
     setPageCount(0)
     setResult(null)
+    setEditedMarkdown('')
     setPreviewOpen(false)
   }
 
   const copyText = async () => {
-    if (!result?.markdown) return
-    await navigator.clipboard.writeText(result.markdown)
+    if (!editedMarkdown) return
+    await navigator.clipboard.writeText(editedMarkdown)
     setCopied(true)
     window.setTimeout(() => setCopied(false), 1800)
   }
+
+  const hasEdited = Boolean(result && editedMarkdown !== result.markdown)
 
   return (
     <section>
@@ -229,7 +305,10 @@ export function PdfToWordPanel({ incoming, onFiles, active, exportRef }: Props) 
                   type="button"
                   role="radio"
                   aria-checked={mode === 'ai'}
-                  onClick={() => setMode('ai')}
+                  onClick={() => {
+                    setModeTouched(true)
+                    setMode('ai')
+                  }}
                   className={`min-h-11 rounded-card border px-3 py-2.5 text-left transition-colors duration-150 ${
                     mode === 'ai'
                       ? 'border-accent bg-accent-soft text-text'
@@ -237,7 +316,7 @@ export function PdfToWordPanel({ incoming, onFiles, active, exportRef }: Props) 
                   }`}
                 >
                   <span className={`block text-[12px] font-semibold ${mode === 'ai' ? 'text-accent' : 'text-text'}`}>
-                    AI Toán – Văn (Khuyên dùng)
+                    AI Toán – Văn {aiStatus.aiConfigured ? '(Sẵn sàng)' : '(Cần API Key)'}
                   </span>
                   <span className="mt-0.5 block text-[11px] text-muted">
                     Giữ công thức Toán sửa được trong Word, bảng &amp; đọc được bản scan
@@ -248,7 +327,10 @@ export function PdfToWordPanel({ incoming, onFiles, active, exportRef }: Props) 
                   role="radio"
                   aria-checked={mode === 'offline'}
                   disabled={isPhotoSource}
-                  onClick={() => setMode('offline')}
+                  onClick={() => {
+                    setModeTouched(true)
+                    setMode('offline')
+                  }}
                   className={`min-h-11 rounded-card border px-3 py-2.5 text-left transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 ${
                     mode === 'offline'
                       ? 'border-accent bg-accent-soft text-text'
@@ -259,7 +341,7 @@ export function PdfToWordPanel({ incoming, onFiles, active, exportRef }: Props) 
                     Nhanh trên máy (Offline)
                   </span>
                   <span className="mt-0.5 block text-[11px] text-muted">
-                    Không cần mạng/API · phù hợp file Văn thuần chữ có thể bôi đen
+                    Không cần mạng/API · giữ chữ đậm/nghiêng, bảng/đáp án A B C D &amp; trang scan
                   </span>
                 </button>
               </div>
@@ -294,25 +376,56 @@ export function PdfToWordPanel({ incoming, onFiles, active, exportRef }: Props) 
                   </div>
                 </div>
 
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setShowPin((value) => !value)}
-                    className="btn-ghost -ml-2 h-11 text-[11px] text-muted"
-                  >
-                    {pin ? '🔑 Đã lưu mã khóa AI (bấm để đổi)' : '🔑 Nhập mã khóa AI (nếu máy chủ có cài PIN)'}
-                  </button>
-                  {showPin && (
-                    <input
-                      type="password"
-                      value={pin}
-                      onChange={(event) => handlePinChange(event.target.value)}
-                      placeholder="Nhập mã PIN riêng của 2 bạn (tự lưu cho lần sau)"
-                      autoComplete="off"
-                      className="mt-1 h-11 w-full rounded-control border border-line bg-surface px-3 text-base text-text outline-none placeholder:text-faint focus:border-accent focus:ring-2 focus:ring-accent-soft sm:max-w-xs sm:text-[13px]"
-                    />
-                  )}
-                </div>
+                {aiStatus.pinRequired && (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setShowKeyBox((value) => !value)}
+                      className="btn-ghost -ml-2 h-11 text-[11px] text-muted"
+                    >
+                      {pin ? '🔑 Đã lưu mã khóa AI (bấm để đổi)' : '🔑 Nhập mã khóa PIN dùng AI'}
+                    </button>
+                    {showKeyBox && (
+                      <input
+                        type="password"
+                        value={pin}
+                        onChange={(event) => handlePinChange(event.target.value)}
+                        placeholder="Nhập mã PIN riêng (tự lưu cho lần sau)"
+                        autoComplete="off"
+                        className="mt-1 h-11 w-full rounded-control border border-line bg-surface px-3 text-base text-text outline-none placeholder:text-faint focus:border-accent focus:ring-2 focus:ring-accent-soft sm:max-w-xs sm:text-[13px]"
+                      />
+                    )}
+                  </div>
+                )}
+
+                {!aiStatus.aiConfigured && (
+                  <div className="rounded-card border border-line bg-surface p-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowKeyBox((value) => !value)}
+                      className="btn-ghost -ml-2 h-11 text-[11px] text-text"
+                    >
+                      {geminiKey
+                        ? '🔑 Đã lưu Gemini API Key cá nhân (bấm để đổi)'
+                        : '🔑 Dán Gemini API Key miễn phí để dùng chế độ AI Toán – Văn'}
+                    </button>
+                    {(showKeyBox || !geminiKey) && (
+                      <div className="mt-1 space-y-1.5">
+                        <input
+                          type="password"
+                          value={geminiKey}
+                          onChange={(event) => handleGeminiKeyChange(event.target.value)}
+                          placeholder="AIza... (lưu ngay trên trình duyệt, không lưu lên server)"
+                          autoComplete="off"
+                          className="h-11 w-full rounded-control border border-line bg-bg px-3 text-base text-text outline-none placeholder:text-faint focus:border-accent focus:ring-2 focus:ring-accent-soft sm:max-w-md sm:text-[13px]"
+                        />
+                        <p className="text-[11px] text-muted">
+                          Nếu chưa có Key, bạn hãy chọn chế độ <strong>Nhanh trên máy (Offline)</strong> ở trên để chuyển đổi ngay không cần mạng.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -373,29 +486,27 @@ export function PdfToWordPanel({ incoming, onFiles, active, exportRef }: Props) 
           {result && (
             <div className="mt-6 rounded-card border border-line bg-surface p-4">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3">
-                <p className="text-xs font-semibold text-text">Nội dung đã chuyển ({result.pageCount} trang)</p>
+                <div>
+                  <p className="text-xs font-semibold text-text">Nội dung đã chuyển ({result.pageCount} trang)</p>
+                  <p className="text-[11px] text-muted">Có thể sửa trực tiếp chữ hoặc công thức bên dưới rồi tải lại file Word.</p>
+                </div>
                 <div className="flex items-center gap-2">
                   <button type="button" onClick={copyText} className="btn-ghost border border-line px-3">
                     {copied ? '✓ Đã chép' : 'Chép chữ'}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      downloadBytes(
-                        result.docxBytes,
-                        outName,
-                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                      )
-                    }
-                    className="btn-primary px-4"
-                  >
-                    Tải lại .docx
+                  <button type="button" onClick={handleDownloadEdited} className="btn-primary px-4">
+                    {hasEdited ? 'Cập nhật & Tải .docx' : 'Tải lại .docx'}
                   </button>
                 </div>
               </div>
-              <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap font-sans text-xs leading-relaxed text-muted">
-                {result.markdown}
-              </pre>
+              <textarea
+                aria-label="Nội dung văn bản đã nhận diện"
+                value={editedMarkdown}
+                onChange={(event) => setEditedMarkdown(event.target.value)}
+                rows={10}
+                spellCheck={false}
+                className="mt-3 w-full resize-y rounded-control border border-line bg-bg p-3 font-sans text-xs leading-relaxed text-text outline-none focus:border-accent focus:ring-2 focus:ring-accent-soft"
+              />
             </div>
           )}
         </>

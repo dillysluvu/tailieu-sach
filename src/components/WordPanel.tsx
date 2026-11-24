@@ -6,7 +6,7 @@ import { isDocxFile, LIMITS, sizeError } from '../lib/errors'
 import { filterPages, outputName, type PagePreset } from '../lib/exportOptions'
 import { extractPages } from '../lib/pdf'
 import { rangeIssue } from '../lib/parse'
-import { convertDocxToPdf } from '../lib/word'
+import { convertDocxToPdf, printWordAsVectorPdf } from '../lib/word'
 import type { IncomingFiles } from '../types'
 import { Dropzone } from './Dropzone'
 import { ExportOptions } from './ExportOptions'
@@ -30,27 +30,32 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
   const [to, setTo] = useState(1)
   const [filename, setFilename] = useState('')
   const [preset, setPreset] = useState<PagePreset>('all')
+  const [printHtml, setPrintHtml] = useState('')
   const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const lastToken = useRef(0)
   const outputCache = useRef<{ key: string; source: Uint8Array; bytes: Uint8Array } | null>(null)
-  const { status, message, run, reset } = useAsyncTask()
+  const { status, message, run, reset, setMessage } = useAsyncTask()
 
-  const acceptFiles = useCallback(async (files: File[]) => {
-    const docx = files.filter(isDocxFile)
-    if (!docx.length) throw new Error('Chỉ hỗ trợ file .docx.')
-    if (docx.length > 1) throw new Error('Chọn một file .docx mỗi lần.')
-    if (docx[0].size > LIMITS.maxFileBytes) throw new Error(sizeError(docx[0]))
-    const converted = await convertDocxToPdf(docx[0])
-    setFile(docx[0])
-    setBytes(converted.bytes)
-    setPageCount(converted.pageCount)
-    setFrom(1)
-    setTo(converted.pageCount)
-    setPreviewBytes(null)
-    setPreviewOpen(false)
-    outputCache.current = null
-  }, [])
+  const acceptFiles = useCallback(
+    async (files: File[]) => {
+      const docx = files.filter(isDocxFile)
+      if (!docx.length) throw new Error('Chỉ hỗ trợ file .docx.')
+      if (docx.length > 1) throw new Error('Chọn một file .docx mỗi lần.')
+      if (docx[0].size > LIMITS.maxFileBytes) throw new Error(sizeError(docx[0]))
+      const converted = await convertDocxToPdf(docx[0], setMessage)
+      setFile(docx[0])
+      setBytes(converted.bytes)
+      setPageCount(converted.pageCount)
+      setPrintHtml(converted.printHtml)
+      setFrom(1)
+      setTo(converted.pageCount)
+      setPreviewBytes(null)
+      setPreviewOpen(false)
+      outputCache.current = null
+    },
+    [setMessage],
+  )
 
   useEffect(() => {
     if (incoming.target === 'word' && incoming.token > lastToken.current && incoming.files.length) {
@@ -104,6 +109,7 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
     setFile(null)
     setBytes(null)
     setPageCount(0)
+    setPrintHtml('')
     setFrom(1)
     setTo(1)
     setPreviewBytes(null)
@@ -138,9 +144,21 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
                 <p className="mt-0.5 text-[11px] tabular text-muted">{pageCount} trang · sẵn sàng</p>
               </div>
             </div>
-            <button type="button" onClick={clear} className="btn-ghost -mr-2">
-              Chọn file khác
-            </button>
+            <div className="flex items-center gap-1">
+              {printHtml && (
+                <button
+                  type="button"
+                  onClick={() => printWordAsVectorPdf(printHtml, name.replace(/\.pdf$/i, ''))}
+                  className="btn-ghost"
+                  title="Mở hộp thoại Lưu thành PDF của máy để giữ nguyên chữ chọn được (Vector)"
+                >
+                  In / PDF nét chữ
+                </button>
+              )}
+              <button type="button" onClick={clear} className="btn-ghost -mr-2">
+                Chọn file khác
+              </button>
+            </div>
           </div>
 
           <div className="mt-5 flex flex-wrap items-end justify-between gap-4 md:gap-6">

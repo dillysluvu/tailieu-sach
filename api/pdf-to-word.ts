@@ -8,23 +8,32 @@ type RequestBody = {
 const PROMPTS: Record<'math' | 'literature' | 'general', string> = {
   math: `Bạn là chuyên gia số hóa đề thi & tài liệu dạy học môn Toán tiếng Việt sang Markdown sạch để xuất ra Microsoft Word.
 Yêu cầu bắt buộc:
-- Giữ chính xác 100% tiếng Việt có dấu, số thứ tự Câu/Bài/Phần, và các đáp án trắc nghiệm A, B, C, D.
-- MỌI biểu thức toán học, phân số, căn thức, lũy thừa, hệ phương trình, hình học (tam giác, góc, song song, vuông góc...) PHẢI viết bằng LaTeX chuẩn: inline dùng $...$ và công thức riêng dòng dùng $$...$$.
-- Giữ bảng biểu bằng Markdown table.
+- Giữ chính xác 100% tiếng Việt có dấu, số thứ tự **Câu 1.**, **Bài 1.**, **Phần I.** và các đáp án trắc nghiệm A, B, C, D.
+- MỌI biểu thức toán học, phân số, căn thức, lũy thừa, hệ phương trình, hình học (tam giác, góc, song song, vuông góc...) PHẢI viết bằng LaTeX chuẩn: inline dùng $...$ và công thức riêng dòng dùng $$...$$. Tuyệt đối KHÔNG dùng \\( ... \\) hay \\[ ... \\].
+- Nếu trang có bảng biểu hoặc phần đầu đề thi chia 2 cột (Sở GD / Trường — Kỳ thi / Mã đề), hãy biểu diễn bằng Markdown table.
 - Không thêm lời bình luận, không bọc toàn bộ kết quả trong khối \`\`\`markdown. Chỉ trả về đúng nội dung tài liệu đã số hóa.`,
 
   literature: `Bạn là chuyên gia số hóa tài liệu dạy học môn Ngữ Văn tiếng Việt sang Markdown sạch để xuất ra Microsoft Word.
 Yêu cầu bắt buộc:
 - Giữ chính xác 100% chính tả và dấu tiếng Việt.
-- Giữ nguyên cấu trúc tiêu đề, đề bài, phần Đọc hiểu / Làm văn, đoạn trích, bảng biểu.
-- Với các đoạn THƠ, giữ nguyên ngắt dòng từng câu thơ và khổ thơ (dùng hai dấu cách cuối dòng hoặc blockquote).
-- Không thêm lời bình luận, không bọc kết quả trong khối \`\`\`markdown. Chỉ trả về đúng nội dung tài liệu.`,
+- Giữ nguyên cấu trúc tiêu đề, đề bài, phần **I. ĐỌC HIỂU** / **II. LÀM VĂN**, đoạn trích, bảng biểu (Markdown table).
+- Với các đoạn THƠ, giữ nguyên ngắt dòng từng câu thơ và khổ thơ (dùng hai dấu cách cuối dòng hoặc blockquote \`>\`).
+- Không thêm lời bình luận, không bọc toàn bộ kết quả trong khối \`\`\`markdown. Chỉ trả về đúng nội dung tài liệu.`,
 
   general: `Bạn là chuyên gia số hóa tài liệu học tập tiếng Việt sang Markdown sạch để xuất ra Microsoft Word.
 Yêu cầu bắt buộc:
-- Giữ chính xác 100% tiếng Việt có dấu, tiêu đề, danh sách, bảng biểu và cấu trúc đề bài.
-- Nếu có công thức toán/khoa học, viết bằng LaTeX chuẩn ($...$ hoặc $$...$$).
-- Không thêm lời bình luận, không bọc kết quả trong khối \`\`\`markdown. Chỉ trả về đúng nội dung tài liệu.`,
+- Giữ chính xác 100% tiếng Việt có dấu, tiêu đề, danh sách, bảng biểu (Markdown table) và cấu trúc đề bài.
+- Nếu có công thức toán/khoa học, viết bằng LaTeX chuẩn ($...$ hoặc $$...$$), KHÔNG dùng \\( ... \\) hay \\[ ... \\].
+- Không thêm lời bình luận, không bọc toàn bộ kết quả trong khối \`\`\`markdown. Chỉ trả về đúng nội dung tài liệu.`,
+}
+
+function normalizeGeminiMarkdown(raw: string): string {
+  return raw
+    .replace(/^```(?:markdown|md)?\s*/i, '')
+    .replace(/\s*```$/i, '')
+    .replace(/\\\[([\s\S]*?)\\\]/g, (_match, expr: string) => `\n$$\n${expr.trim()}\n$$\n`)
+    .replace(/\\\((.+?)\\\)/g, (_match, expr: string) => `$${expr.trim()}$`)
+    .trim()
 }
 
 async function readJsonBody(req: IncomingMessage & { body?: unknown }): Promise<RequestBody> {
@@ -43,13 +52,26 @@ function sendJson(res: ServerResponse, status: number, payload: Record<string, u
 }
 
 export default async function handler(req: IncomingMessage & { body?: unknown }, res: ServerResponse) {
-  if (req.method !== 'POST') {
-    sendJson(res, 405, { error: 'Chỉ hỗ trợ phương thức POST.' })
+  const serverApiKey = process.env.GEMINI_API_KEY?.trim() ?? ''
+  const requiredPin = process.env.ACCESS_PIN?.trim() ?? ''
+
+  if (req.method === 'GET') {
+    sendJson(res, 200, {
+      aiConfigured: Boolean(serverApiKey),
+      pinRequired: Boolean(serverApiKey && requiredPin),
+    })
     return
   }
 
-  const requiredPin = process.env.ACCESS_PIN?.trim()
-  if (requiredPin) {
+  if (req.method !== 'POST') {
+    sendJson(res, 405, { error: 'Chỉ hỗ trợ phương thức GET hoặc POST.' })
+    return
+  }
+
+  const userApiKey = String(req.headers['x-gemini-key'] ?? '').trim()
+  const apiKey = serverApiKey || userApiKey
+
+  if (serverApiKey && requiredPin && !userApiKey) {
     const providedPin = String(req.headers['x-access-pin'] ?? '').trim()
     if (providedPin !== requiredPin) {
       sendJson(res, 401, { error: 'Mã khóa truy cập AI không đúng. Hãy kiểm tra lại mã PIN.' })
@@ -57,10 +79,10 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     }
   }
 
-  const apiKey = process.env.GEMINI_API_KEY?.trim()
   if (!apiKey) {
     sendJson(res, 503, {
-      error: 'Chưa cấu hình GEMINI_API_KEY trên máy chủ. Bạn có thể dùng tạm chế độ "Nhanh trên máy (Offline)".',
+      error:
+        'Máy chủ chưa cài GEMINI_API_KEY. Bạn có thể dán Gemini API Key miễn phí của mình hoặc dùng chế độ "Nhanh trên máy (Offline)".',
     })
     return
   }
@@ -117,15 +139,8 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
       return
     }
 
-    const text =
-      payload.candidates?.[0]?.content?.parts
-        ?.map((part) => part.text ?? '')
-        .join('')
-        .replace(/^```(?:markdown|md)?\s*/i, '')
-        .replace(/\s*```$/i, '')
-        .trim() ?? ''
-
-    sendJson(res, 200, { markdown: text })
+    const rawText = payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? ''
+    sendJson(res, 200, { markdown: normalizeGeminiMarkdown(rawText) })
   } catch (error) {
     sendJson(res, 500, {
       error: error instanceof Error ? error.message : 'Lỗi gọi dịch vụ AI.',

@@ -45,7 +45,7 @@ export default defineConfig({
             { name: 'pdf-vendor', test: /node_modules[\\/]pdf-lib[\\/]/, priority: 2 },
             {
               name: 'word-vendor',
-              test: /node_modules[\\/](mammoth|html2pdf\.js|jspdf|html2canvas|dompurify)[\\/]/,
+              test: /node_modules[\\/](docx-preview|mammoth|html2pdf\.js|jspdf|html2canvas|dompurify)[\\/]/,
               priority: 2,
             },
             {
