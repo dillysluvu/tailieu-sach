@@ -103,8 +103,14 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
   }
 
   const subject = body.subject && body.subject in PROMPTS ? body.subject : 'general'
-  const model = process.env.GEMINI_MODEL?.trim() || 'gemini-3.8-flash'
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`
+  const preferred = process.env.GEMINI_MODEL?.trim()
+  const modelQueue = Array.from(
+    new Set(
+      [preferred, 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.7-flash', 'gemini-3-flash-preview'].filter(
+        (m): m is string => Boolean(m),
+      ),
+    ),
+  )
 
   const parts: Array<Record<string, unknown>> = [{ text: PROMPTS[subject] }]
   for (const base64 of images) {
@@ -116,32 +122,44 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     })
   }
 
+  let lastStatus = 502
+  let lastError = 'Lỗi gọi dịch vụ AI.'
+
   try {
-    const upstream = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts }],
-        generationConfig: {
-          temperature: 0.1,
-        },
-      }),
-    })
-
-    const payload = (await upstream.json().catch(() => ({}))) as {
-      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
-      error?: { message?: string }
-    }
-
-    if (!upstream.ok) {
-      sendJson(res, 502, {
-        error: payload.error?.message || `Gemini API trả về lỗi (${upstream.status}).`,
+    for (const model of modelQueue) {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`
+      const upstream = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts }],
+          generationConfig: {
+            temperature: 0.1,
+          },
+        }),
       })
-      return
+
+      const payload = (await upstream.json().catch(() => ({}))) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
+        error?: { message?: string }
+      }
+
+      if (upstream.ok) {
+        const rawText = payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? ''
+        sendJson(res, 200, { markdown: normalizeGeminiMarkdown(rawText), model })
+        return
+      }
+
+      lastStatus = upstream.status
+      lastError = payload.error?.message || `Gemini API trả về lỗi (${upstream.status}).`
+
+      // Retry next Flash model on high-demand (429/503) or retired/unavailable model (404/400)
+      if (![400, 404, 429, 500, 503].includes(lastStatus)) {
+        break
+      }
     }
 
-    const rawText = payload.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('') ?? ''
-    sendJson(res, 200, { markdown: normalizeGeminiMarkdown(rawText) })
+    sendJson(res, 502, { error: lastError })
   } catch (error) {
     sendJson(res, 500, {
       error: error instanceof Error ? error.message : 'Lỗi gọi dịch vụ AI.',
