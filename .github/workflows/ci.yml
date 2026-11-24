@@ -47,10 +47,15 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx vercel pull --yes --environment=production --token=$VERCEL_TOKEN
-      - run: npx vercel build --prod --token=$VERCEL_TOKEN
-      - name: Deploy to Vercel
-        run: npx vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+      - name: Check Vercel Token & Deploy to Production
+        run: |
+          if [ -n "${VERCEL_TOKEN:-}" ] && npx --yes vercel whoami --token="$VERCEL_TOKEN" >/dev/null 2>&1; then
+            npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+            npx vercel build --prod --token="$VERCEL_TOKEN"
+            npx vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+          else
+            echo "::warning::VERCEL_TOKEN trên GitHub chưa cài hoặc đã hết hạn; bỏ qua bước deploy CI (có thể deploy trực tiếp bằng 'deploy-pdf --public')." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
   deploy-preview:
     needs: [check, e2e]
@@ -63,12 +68,16 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx vercel pull --yes --environment=preview --token=$VERCEL_TOKEN
-      - run: npx vercel build --token=$VERCEL_TOKEN
-      - name: Deploy preview
+      - name: Check Vercel Token & Deploy Preview
         id: preview
-        run: echo "url=$(npx vercel deploy --prebuilt --token=$VERCEL_TOKEN | tail -1)" >> "$GITHUB_OUTPUT"
+        run: |
+          if [ -n "${VERCEL_TOKEN:-}" ] && npx --yes vercel whoami --token="$VERCEL_TOKEN" >/dev/null 2>&1; then
+            npx vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+            npx vercel build --token="$VERCEL_TOKEN"
+            echo "url=$(npx vercel deploy --prebuilt --token="$VERCEL_TOKEN" | tail -1)" >> "$GITHUB_OUTPUT"
+          fi
       - name: Comment preview URL
+        if: steps.preview.outputs.url != ''
         uses: actions/github-script@v7
         env:
           PREVIEW_URL: ${{ steps.preview.outputs.url }}
