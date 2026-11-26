@@ -267,6 +267,7 @@ export function PdfToWordPanel({ incoming, onFiles, active, exportRef }: Props) 
         hint="hỗ trợ cả đề Toán có công thức, bài Văn, PDF scan & ảnh chụp điện thoại"
         onFiles={onFiles}
         busy={busy}
+        compact={hasSource}
       />
 
       {hasSource && (

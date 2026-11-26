@@ -505,6 +505,7 @@ export function EditPdfPanel({ incoming, onFiles, active, exportRef }: Props) {
         hint="hoặc bấm để chọn · xoay, sắp xếp/xóa trang, đánh số, dấu mờ, in gộp, chuẩn hóa A4, cắt lề"
         onFiles={onFiles}
         busy={busy}
+        compact={Boolean(file)}
       />
 
       {file && bytes && (

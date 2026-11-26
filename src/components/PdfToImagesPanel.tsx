@@ -154,6 +154,7 @@ export function PdfToImagesPanel({ incoming, onFiles, active, exportRef }: Props
         hint="hoặc bấm để chọn · xuất ảnh sắc nét gửi thẳng cho học sinh qua Zalo"
         onFiles={onFiles}
         busy={busy}
+        compact={Boolean(file)}
       />
 
       {bytes && file && (

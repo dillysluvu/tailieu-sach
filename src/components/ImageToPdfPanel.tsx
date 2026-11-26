@@ -122,6 +122,7 @@ export function ImageToPdfPanel({ incoming, onFiles, active, exportRef }: Props)
         hint="hoặc bấm để chọn · mỗi ảnh thành một trang A4"
         onFiles={onFiles}
         busy={status === 'running'}
+        compact={items.length > 0}
       />
 
       {items.length > 0 && (

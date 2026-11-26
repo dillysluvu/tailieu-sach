@@ -10,7 +10,7 @@ type Props = {
 
 export function ExportOptions({ filename, onFilename, preset, onPreset, extension = 'pdf' }: Props) {
   return (
-    <div className="mt-5 space-y-4 border-t border-line pt-4">
+    <div className="mt-5 grid grid-cols-1 gap-4 rounded-card border border-line bg-group/80 p-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
       <label className="flex flex-col gap-1.5">
         <span className="text-[11px] font-medium text-muted">Tên file xuất</span>
         <div className="flex h-11 items-center rounded-control border border-line bg-surface px-3 transition-all duration-150 focus-within:border-accent focus-within:ring-3 focus-within:ring-accent/20">

@@ -80,15 +80,29 @@ export function Tabs({ active, onChange }: Props) {
     <div
       role="tablist"
       aria-label="Chọn công cụ xử lý tài liệu"
-      className="grid grid-cols-2 gap-1.5 md:flex md:flex-col md:gap-1"
+      className="grid grid-cols-2 gap-1.5 md:flex md:flex-col md:gap-0.5"
     >
       {TAB_LIST.map((tab, index) => {
         const selected = active === tab.key
+        const isFirstOrganize = index === 0
         const isFirstConvert = index > 0 && TAB_LIST[index - 1].group !== tab.group
         return (
           <Fragment key={tab.key}>
+            {isFirstOrganize && (
+              <p
+                aria-hidden="true"
+                className="hidden px-2.5 pb-1 pt-1 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-faint md:block"
+              >
+                Xử lý PDF
+              </p>
+            )}
             {isFirstConvert && (
-              <div aria-hidden="true" className="hidden md:my-2 md:block md:border-t md:border-line" />
+              <p
+                aria-hidden="true"
+                className="hidden px-2.5 pb-1 pt-3.5 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-faint md:block"
+              >
+                Chuyển đổi
+              </p>
             )}
             <button
               ref={(element) => {
@@ -102,7 +116,7 @@ export function Tabs({ active, onChange }: Props) {
               tabIndex={selected ? 0 : -1}
               onClick={() => onChange(tab.key)}
               onKeyDown={(event) => handleKeyDown(event, index)}
-              className={`group flex min-h-11 items-center gap-2.5 rounded-[11px] px-2.5 py-2 text-left transition-colors duration-150 ${
+              className={`group flex min-h-11 items-center gap-2.5 rounded-[10px] px-2.5 py-1.5 text-left transition-colors duration-150 ${
                 selected
                   ? 'bg-accent-soft text-accent'
                   : 'border border-line bg-surface text-muted hover:bg-surface-hover hover:text-text md:border-transparent md:bg-transparent'

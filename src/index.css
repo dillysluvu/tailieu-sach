@@ -26,6 +26,7 @@
   --color-bg: var(--bg);
   --color-sidebar: var(--sidebar);
   --color-surface: var(--surface);
+  --color-group: var(--group);
   --color-surface-hover: var(--surface-hover);
   --color-text: var(--text);
   --color-muted: var(--muted);
@@ -49,31 +50,33 @@
 @layer base {
   :root {
     color-scheme: light;
-    --bg: #f5f5f7;
-    --sidebar: rgba(245, 245, 248, 0.84);
+    --bg: #e8e8ed;
+    --sidebar: #f2f2f6;
     --surface: #ffffff;
-    --surface-hover: rgba(0, 0, 0, 0.045);
+    --group: #f7f7fa;
+    --surface-hover: rgba(0, 0, 0, 0.05);
     --text: #1d1d1f;
     --muted: #6e6e73;
     --faint: #86868b;
     --line: rgba(0, 0, 0, 0.09);
-    --line-strong: rgba(0, 0, 0, 0.17);
+    --line-strong: rgba(0, 0, 0, 0.18);
     --accent: #0071e3;
     --accent-hover: #0077ed;
-    --accent-soft: rgba(0, 113, 227, 0.10);
+    --accent-soft: rgba(0, 113, 227, 0.12);
     --danger: #d70015;
     --success: #248a3d;
     --glow: rgba(0, 113, 227, 0.08);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 30px -12px rgba(0, 0, 0, 0.12);
-    --window-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 24px 64px -24px rgba(0, 0, 0, 0.16), 0 4px 16px -4px rgba(0, 0, 0, 0.06);
+    --window-shadow: 0 0 0 1px rgba(0, 0, 0, 0.07), 0 28px 72px -20px rgba(0, 0, 0, 0.22), 0 6px 20px -6px rgba(0, 0, 0, 0.08);
   }
 
   .dark {
     color-scheme: dark;
-    --bg: #161618;
-    --sidebar: rgba(28, 28, 32, 0.84);
-    --surface: #1e1e22;
-    --surface-hover: rgba(255, 255, 255, 0.07);
+    --bg: #0c0c0e;
+    --sidebar: #1b1b1f;
+    --surface: #141417;
+    --group: #1d1d22;
+    --surface-hover: rgba(255, 255, 255, 0.075);
     --text: #f5f5f7;
     --muted: #a1a1a6;
     --faint: #7c7c82;
@@ -81,12 +84,12 @@
     --line-strong: rgba(255, 255, 255, 0.20);
     --accent: #2997ff;
     --accent-hover: #47a6ff;
-    --accent-soft: rgba(41, 151, 255, 0.16);
+    --accent-soft: rgba(41, 151, 255, 0.18);
     --danger: #ff453a;
     --success: #30d158;
-    --glow: rgba(41, 151, 255, 0.11);
+    --glow: rgba(41, 151, 255, 0.10);
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 16px 40px -18px rgba(0, 0, 0, 0.72);
-    --window-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 28px 72px -24px rgba(0, 0, 0, 0.8), 0 6px 20px -6px rgba(0, 0, 0, 0.5);
+    --window-shadow: 0 0 0 1px rgba(255, 255, 255, 0.10), 0 32px 84px -20px rgba(0, 0, 0, 0.85), 0 8px 24px -6px rgba(0, 0, 0, 0.55);
   }
 
   html {
@@ -168,6 +171,11 @@
     border-radius: var(--radius-window);
     box-shadow: var(--window-shadow);
   }
+
+  .mac-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
 }
 
 .mac-sidebar {
@@ -182,7 +190,7 @@
   gap: 3px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  background: var(--bg);
+  background: var(--group);
   padding: 2px 6px;
   font-size: 10.5px;
   font-weight: 500;

@@ -160,6 +160,7 @@ export function SplitPdfPanel({ incoming, onFiles, active, exportRef }: Props) {
         hint="hoặc bấm để chọn · tách thành nhiều file PDF gọn trong 1 file .zip"
         onFiles={onFiles}
         busy={busy}
+        compact={Boolean(file)}
       />
 
       {file && pageCount > 0 && (

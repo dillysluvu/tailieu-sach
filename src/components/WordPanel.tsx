@@ -128,6 +128,7 @@ export function WordPanel({ incoming, onFiles, active, exportRef }: Props) {
         hint="hoặc bấm để chọn · chuyển sang PDF ngay lập tức"
         onFiles={onFiles}
         busy={busy}
+        compact={Boolean(file)}
       />
 
       {bytes && file && (

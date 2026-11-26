@@ -106,6 +106,7 @@ export function PdfMergerPanel({ incoming, onFiles, active, exportRef }: Props) 
         hint="hoặc bấm để chọn · có thể chọn nhiều file"
         onFiles={onFiles}
         busy={status === 'running'}
+        compact={rows.length > 0}
       />
 
       <p className="sr-only" aria-live="polite">

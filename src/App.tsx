@@ -105,37 +105,28 @@ export default function App() {
   const currentTab = TAB_INFO[tab]
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-[1040px] flex-col md:px-6 md:py-7">
-      <div className="mac-window flex flex-1 flex-col overflow-x-clip pb-32 md:overflow-hidden md:pb-0">
-        <header className="group/bar sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-line bg-surface/85 px-4 py-2.5 backdrop-blur-2xl backdrop-saturate-150 sm:px-6 md:static md:px-5">
-          <div className="flex items-center gap-3">
-            <div aria-hidden="true" className="hidden items-center gap-2 md:flex">
-              <span className="h-3 w-3 rounded-full bg-line-strong transition-colors duration-150 group-hover/bar:bg-[#ff5f57]" />
-              <span className="h-3 w-3 rounded-full bg-line-strong transition-colors duration-150 group-hover/bar:bg-[#febc2e]" />
-              <span className="h-3 w-3 rounded-full bg-line-strong transition-colors duration-150 group-hover/bar:bg-[#28c840]" />
-            </div>
-            <div className="flex items-center gap-2">
-              <span
-                aria-hidden="true"
-                className="flex h-6 w-6 items-center justify-center rounded-[7px] bg-accent text-white shadow-[0_1px_4px_rgba(0,113,227,0.35)]"
-              >
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5">
-                  <path d="M5 3.5h6.5L15 7v9.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-13Z" strokeLinejoin="round" />
-                  <path d="M11.5 3.5V7H15" strokeLinejoin="round" />
-                </svg>
-              </span>
-              <span className="text-[13px] font-semibold tracking-[-0.015em] text-text">Tài liệu PDF</span>
-            </div>
-          </div>
-
-          <span className="hidden text-[12.5px] font-medium text-muted md:block">{currentTab.label}</span>
-
-          <div className="flex items-center gap-2">
-            <span className="hidden rounded-full border border-line bg-bg/80 px-2.5 py-1 text-[11px] font-medium text-muted sm:inline-flex">
-              Xử lý trên máy
+    <main className="mx-auto flex min-h-dvh w-full max-w-[1180px] flex-col md:h-dvh md:px-6 md:py-5">
+      <div className="mac-window flex flex-1 flex-col overflow-x-clip pb-32 md:grid md:min-h-0 md:grid-cols-[252px_minmax(0,1fr)] md:grid-rows-[auto_minmax(0,1fr)] md:overflow-hidden md:pb-0">
+        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-line bg-surface/85 px-4 py-2.5 backdrop-blur-2xl backdrop-saturate-150 sm:px-6 md:static md:col-start-2 md:row-start-1 md:px-7 md:py-3.5">
+          <div className="flex items-center gap-2 md:hidden">
+            <span
+              aria-hidden="true"
+              className="flex h-6 w-6 items-center justify-center rounded-[7px] bg-accent text-white shadow-[0_1px_4px_rgba(0,113,227,0.35)]"
+            >
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5">
+                <path d="M5 3.5h6.5L15 7v9.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-13Z" strokeLinejoin="round" />
+                <path d="M11.5 3.5V7H15" strokeLinejoin="round" />
+              </svg>
             </span>
-            <ThemeToggle preference={preference} onCycle={cycle} />
+            <span className="text-[13px] font-semibold tracking-[-0.015em] text-text">Tài liệu PDF</span>
           </div>
+
+          <div className="hidden min-w-0 md:block">
+            <p className="truncate text-[16px] font-semibold tracking-[-0.02em] text-text">{currentTab.label}</p>
+            <p className="truncate text-[12px] text-muted">{currentTab.hint}</p>
+          </div>
+
+          <ThemeToggle preference={preference} onCycle={cycle} />
         </header>
 
         <h1 className="sr-only">Cắt gộp PDF, tách file, nén PDF, chỉnh trang, xuất ảnh, chuyển PDF và Word</h1>
@@ -155,43 +146,71 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        <div className="flex flex-1 flex-col md:grid md:grid-cols-[236px_minmax(0,1fr)]">
-          <aside className="mac-sidebar border-b border-line px-4 py-3 sm:px-6 md:border-b-0 md:border-r md:p-3.5">
+        <aside className="mac-sidebar border-b border-line px-4 py-3 sm:px-6 md:col-start-1 md:row-span-2 md:row-start-1 md:flex md:min-h-0 md:flex-col md:border-b-0 md:border-r md:p-0">
+          <div className="hidden items-center justify-between px-4 pb-3 pt-4 md:flex">
+            <div className="flex items-center gap-2.5">
+              <div aria-hidden="true" className="flex items-center gap-1.5">
+                <span className="h-3 w-3 rounded-full bg-[#ff5f57] ring-1 ring-black/10" />
+                <span className="h-3 w-3 rounded-full bg-[#febc2e] ring-1 ring-black/10" />
+                <span className="h-3 w-3 rounded-full bg-[#28c840] ring-1 ring-black/10" />
+              </div>
+              <div className="ml-1.5 flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="flex h-6 w-6 items-center justify-center rounded-[7px] bg-accent text-white shadow-[0_1px_4px_rgba(0,113,227,0.35)]"
+                >
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5">
+                    <path d="M5 3.5h6.5L15 7v9.5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-13Z" strokeLinejoin="round" />
+                    <path d="M11.5 3.5V7H15" strokeLinejoin="round" />
+                  </svg>
+                </span>
+                <span className="text-[13px] font-semibold tracking-[-0.015em] text-text">Tài liệu PDF</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mac-scroll md:flex-1 md:overflow-y-auto md:px-3 md:py-2">
             <Tabs active={tab} onChange={setTab} />
-          </aside>
+          </div>
 
-          <div className="min-w-0 flex-1 px-4 pb-6 pt-5 sm:px-6 md:px-8 md:py-7">
-            <div className="mb-5 border-b border-line/80 pb-4">
-              <p className="text-[19px] font-semibold tracking-[-0.025em] text-text sm:text-[20px]">
-                {currentTab.label}
-              </p>
-              <p className="mt-0.5 text-[12.5px] text-muted">{currentTab.hint}</p>
-            </div>
+          <div className="hidden items-center justify-between border-t border-line px-4 py-3 text-[11px] text-muted md:flex">
+            <span className="flex items-center gap-1.5">
+              <span aria-hidden="true" className="h-2 w-2 rounded-full bg-success" />
+              Xử lý trên máy
+            </span>
+            <span className="tabular text-faint">≤ 500 MB</span>
+          </div>
+        </aside>
 
-            <div id="panel-pdf" role="tabpanel" aria-labelledby="tab-pdf" className={tab === 'pdf' ? '' : 'hidden'}>
-              <PdfMergerPanel incoming={incoming} onFiles={handleFiles} active={tab === 'pdf'} exportRef={exportRef} />
-            </div>
-            <div id="panel-split" role="tabpanel" aria-labelledby="tab-split" className={tab === 'split' ? '' : 'hidden'}>
-              <SplitPdfPanel incoming={incoming} onFiles={handleFiles} active={tab === 'split'} exportRef={exportRef} />
-            </div>
-            <div id="panel-compress" role="tabpanel" aria-labelledby="tab-compress" className={tab === 'compress' ? '' : 'hidden'}>
-              <CompressPdfPanel incoming={incoming} onFiles={handleFiles} active={tab === 'compress'} exportRef={exportRef} />
-            </div>
-            <div id="panel-edit" role="tabpanel" aria-labelledby="tab-edit" className={tab === 'edit' ? '' : 'hidden'}>
-              <EditPdfPanel incoming={incoming} onFiles={handleFiles} active={tab === 'edit'} exportRef={exportRef} />
-            </div>
-            <div id="panel-pdf2img" role="tabpanel" aria-labelledby="tab-pdf2img" className={tab === 'pdf2img' ? '' : 'hidden'}>
-              <PdfToImagesPanel incoming={incoming} onFiles={handleFiles} active={tab === 'pdf2img'} exportRef={exportRef} />
-            </div>
-            <div id="panel-pdf2word" role="tabpanel" aria-labelledby="tab-pdf2word" className={tab === 'pdf2word' ? '' : 'hidden'}>
-              <PdfToWordPanel incoming={incoming} onFiles={handleFiles} active={tab === 'pdf2word'} exportRef={exportRef} />
-            </div>
-            <div id="panel-word" role="tabpanel" aria-labelledby="tab-word" className={tab === 'word' ? '' : 'hidden'}>
-              <WordPanel incoming={incoming} onFiles={handleFiles} active={tab === 'word'} exportRef={exportRef} />
-            </div>
-            <div id="panel-image" role="tabpanel" aria-labelledby="tab-image" className={tab === 'image' ? '' : 'hidden'}>
-              <ImageToPdfPanel incoming={incoming} onFiles={handleFiles} active={tab === 'image'} exportRef={exportRef} />
-            </div>
+        <div className="mac-scroll min-w-0 flex-1 px-4 pb-6 pt-5 sm:px-6 md:col-start-2 md:row-start-2 md:min-h-0 md:overflow-y-auto md:px-7 md:py-6">
+          <div className="mb-5 border-b border-line/80 pb-3.5 md:hidden">
+            <p className="text-[18px] font-semibold tracking-[-0.025em] text-text">{currentTab.label}</p>
+            <p className="mt-0.5 text-[12.5px] text-muted">{currentTab.hint}</p>
+          </div>
+
+          <div id="panel-pdf" role="tabpanel" aria-labelledby="tab-pdf" className={tab === 'pdf' ? '' : 'hidden'}>
+            <PdfMergerPanel incoming={incoming} onFiles={handleFiles} active={tab === 'pdf'} exportRef={exportRef} />
+          </div>
+          <div id="panel-split" role="tabpanel" aria-labelledby="tab-split" className={tab === 'split' ? '' : 'hidden'}>
+            <SplitPdfPanel incoming={incoming} onFiles={handleFiles} active={tab === 'split'} exportRef={exportRef} />
+          </div>
+          <div id="panel-compress" role="tabpanel" aria-labelledby="tab-compress" className={tab === 'compress' ? '' : 'hidden'}>
+            <CompressPdfPanel incoming={incoming} onFiles={handleFiles} active={tab === 'compress'} exportRef={exportRef} />
+          </div>
+          <div id="panel-edit" role="tabpanel" aria-labelledby="tab-edit" className={tab === 'edit' ? '' : 'hidden'}>
+            <EditPdfPanel incoming={incoming} onFiles={handleFiles} active={tab === 'edit'} exportRef={exportRef} />
+          </div>
+          <div id="panel-pdf2img" role="tabpanel" aria-labelledby="tab-pdf2img" className={tab === 'pdf2img' ? '' : 'hidden'}>
+            <PdfToImagesPanel incoming={incoming} onFiles={handleFiles} active={tab === 'pdf2img'} exportRef={exportRef} />
+          </div>
+          <div id="panel-pdf2word" role="tabpanel" aria-labelledby="tab-pdf2word" className={tab === 'pdf2word' ? '' : 'hidden'}>
+            <PdfToWordPanel incoming={incoming} onFiles={handleFiles} active={tab === 'pdf2word'} exportRef={exportRef} />
+          </div>
+          <div id="panel-word" role="tabpanel" aria-labelledby="tab-word" className={tab === 'word' ? '' : 'hidden'}>
+            <WordPanel incoming={incoming} onFiles={handleFiles} active={tab === 'word'} exportRef={exportRef} />
+          </div>
+          <div id="panel-image" role="tabpanel" aria-labelledby="tab-image" className={tab === 'image' ? '' : 'hidden'}>
+            <ImageToPdfPanel incoming={incoming} onFiles={handleFiles} active={tab === 'image'} exportRef={exportRef} />
           </div>
         </div>
       </div>

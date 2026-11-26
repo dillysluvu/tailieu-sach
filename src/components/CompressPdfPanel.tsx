@@ -155,6 +155,7 @@ export function CompressPdfPanel({ incoming, onFiles, active, exportRef }: Props
         hint="hoặc bấm để chọn · nén gọn để gửi Zalo, email hoặc nộp cổng trực tuyến"
         onFiles={onFiles}
         busy={busy}
+        compact={Boolean(file)}
       />
 
       {file && bytes && (
