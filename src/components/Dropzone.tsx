@@ -59,12 +59,12 @@ export function Dropzone({ accept, multiple, title, hint, onFiles, busy = false 
         setOver(false)
         onFiles(Array.from(event.dataTransfer.files))
       }}
-      animate={reduce ? undefined : { scale: over ? 1.004 : 1 }}
+      animate={reduce ? undefined : { scale: over ? 1.005 : 1 }}
       transition={{ duration: 0.18, ease: [0.2, 0.8, 0.2, 1] }}
-      className={`soft-shadow flex min-h-35 cursor-pointer flex-col items-center justify-center gap-2 rounded-dropzone border border-dashed px-4 py-8 text-center transition-colors duration-150 sm:min-h-46 ${
+      className={`soft-shadow flex min-h-38 cursor-pointer flex-col items-center justify-center gap-2.5 rounded-dropzone border-[1.5px] border-dashed px-4 py-8 text-center transition-all duration-150 sm:min-h-46 ${
         over
-          ? 'border-accent bg-accent-soft'
-          : 'border-line-strong bg-surface hover:border-accent hover:bg-accent-soft/40'
+          ? 'border-accent bg-accent-soft ring-4 ring-accent/15'
+          : 'border-line-strong bg-bg/55 hover:border-accent/60 hover:bg-accent-soft/35'
       }`}
     >
       <input
@@ -78,28 +78,25 @@ export function Dropzone({ accept, multiple, title, hint, onFiles, busy = false 
           event.target.value = ''
         }}
       />
-      <m.svg
-        aria-hidden="true"
-        viewBox="0 0 48 48"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        animate={reduce ? undefined : { y: over ? -3 : 0, opacity: over ? 1 : 0.8 }}
-        transition={{ duration: 0.18 }}
-        className={`h-11 w-11 ${over ? 'text-accent' : 'text-faint'}`}
+      <m.div
+        animate={reduce ? undefined : { y: over ? -3 : 0, scale: over ? 1.04 : 1 }}
+        transition={{ duration: 0.18, ease: [0.2, 0.8, 0.2, 1] }}
+        className={`flex h-12 w-12 items-center justify-center rounded-[14px] transition-colors duration-150 ${
+          over ? 'bg-accent text-white shadow-[0_6px_16px_-4px_rgba(0,113,227,0.45)]' : 'bg-accent-soft text-accent'
+        }`}
       >
-        <rect x="9" y="7" width="19" height="25" rx="3" opacity="0.45" />
-        <rect x="20" y="14" width="19" height="25" rx="3" />
-        <path d="M25 21h9M25 26h9M25 31h6" strokeLinecap="round" />
-        <path d="M13 38v5m0 0-2.5-2.5M13 43l2.5-2.5" strokeLinecap="round" strokeLinejoin="round" />
-      </m.svg>
-      <p className="text-[13px] font-semibold tracking-[-0.01em] text-text">{title}</p>
-      <p className="text-xs text-muted">{hint}</p>
-      <div className="mt-1 flex flex-wrap items-center justify-center gap-1.5">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-6 w-6">
+          <path d="M12 16V4m0 0L8 8m4-4 4 4" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M4 16v2.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V16" strokeLinecap="round" />
+        </svg>
+      </m.div>
+      <p className="text-[14.5px] font-semibold tracking-[-0.015em] text-text">{title}</p>
+      <p className="max-w-md text-[12.5px] text-muted">{hint}</p>
+      <div className="mt-0.5 flex flex-wrap items-center justify-center gap-1.5">
         {chips.map((chip) => (
           <span
             key={chip}
-            className="rounded-full border border-line bg-bg px-2 py-0.5 text-[10px] leading-4 text-muted"
+            className="rounded-full border border-line bg-surface/90 px-2.5 py-0.5 text-[10.5px] font-medium leading-4 text-muted"
           >
             {chip}
           </span>

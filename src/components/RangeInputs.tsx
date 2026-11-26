@@ -8,7 +8,7 @@ type NumberBoxProps = {
 function NumberBox({ label, value, max, onChange }: NumberBoxProps) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[10px] font-medium uppercase tracking-[0.08em] text-faint">{label}</span>
+      <span className="text-[11px] font-medium text-muted">{label}</span>
       <input
         type="number"
         inputMode="numeric"
@@ -19,7 +19,7 @@ function NumberBox({ label, value, max, onChange }: NumberBoxProps) {
         max={max}
         value={Number.isFinite(value) ? value : ''}
         onChange={(event) => onChange(event.target.value === '' ? 0 : Number(event.target.value))}
-        className="h-11 w-14 rounded-control border border-line bg-surface px-1 text-center text-base tabular text-text outline-none transition-colors duration-150 hover:border-line-strong focus:border-accent focus:ring-2 focus:ring-accent-soft sm:w-16 sm:text-sm"
+        className="h-11 w-14 rounded-control border border-line bg-surface px-1 text-center text-base tabular text-text outline-none transition-all duration-150 hover:border-line-strong focus:border-accent focus:ring-3 focus:ring-accent/20 sm:w-16 sm:text-sm"
       />
     </label>
   )

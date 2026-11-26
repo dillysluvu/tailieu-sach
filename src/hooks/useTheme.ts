@@ -35,7 +35,7 @@ export function useTheme() {
     document.documentElement.style.colorScheme = resolved
     document
       .querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', resolved === 'dark' ? '#0b0b0f' : '#fafafa')
+      ?.setAttribute('content', resolved === 'dark' ? '#161618' : '#f5f5f7')
     try {
       localStorage.setItem(STORAGE_KEY, preference)
     } catch {

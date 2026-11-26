@@ -36,7 +36,7 @@ export function PdfRowItem({
     <m.li
       layout={reduce ? false : 'position'}
       initial={reduce ? false : { opacity: 0, y: 6 }}
-      animate={{ opacity: dragging ? 0.4 : 1, y: 0 }}
+      animate={{ opacity: dragging ? 0.45 : 1, y: 0 }}
       exit={reduce ? { opacity: 0 } : { opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0 }}
       transition={{ duration: 0.18, ease: [0.2, 0.8, 0.2, 1] }}
       onDragOver={(event) => {
@@ -53,7 +53,9 @@ export function PdfRowItem({
         setOver(false)
         onDrop(sourceId, row.id)
       }}
-      className={`border-b border-line py-3 ${over ? 'rounded-control bg-accent-soft ring-1 ring-accent' : ''}`}
+      className={`-mx-2 rounded-card border-b border-line px-2 py-3 transition-colors duration-150 hover:bg-surface-hover/55 ${
+        over ? 'bg-accent-soft ring-2 ring-accent/40' : ''
+      }`}
     >
       <div className="flex flex-wrap items-center gap-2 md:flex-nowrap md:gap-3">
         <span
@@ -71,8 +73,8 @@ export function PdfRowItem({
           ⠿
         </span>
 
-        <div className="flex min-w-0 basis-[calc(100%-64px)] items-start gap-2 flex-1 md:basis-auto">
-          <span className="mt-0.5 shrink-0 rounded bg-accent-soft px-1.5 py-0.5 text-[9px] font-semibold tracking-[0.08em] text-accent">
+        <div className="flex min-w-0 flex-1 basis-[calc(100%-64px)] items-start gap-2.5 md:basis-auto">
+          <span className="mt-0.5 shrink-0 rounded-[6px] bg-accent-soft px-1.5 py-0.5 text-[9.5px] font-semibold tracking-[0.06em] text-accent">
             PDF
           </span>
           <div className="min-w-0">

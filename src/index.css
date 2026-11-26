@@ -21,9 +21,10 @@
 }
 
 @theme inline {
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
 
   --color-bg: var(--bg);
+  --color-sidebar: var(--sidebar);
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-hover);
   --color-text: var(--text);
@@ -32,13 +33,15 @@
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
   --color-danger: var(--danger);
   --color-success: var(--success);
 
-  --radius-control: 6px;
-  --radius-card: 10px;
-  --radius-dropzone: 12px;
+  --radius-control: 10px;
+  --radius-card: 14px;
+  --radius-dropzone: 16px;
+  --radius-window: 20px;
 
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -46,38 +49,44 @@
 @layer base {
   :root {
     color-scheme: light;
-    --bg: #fbfbfc;
+    --bg: #f5f5f7;
+    --sidebar: rgba(245, 245, 248, 0.84);
     --surface: #ffffff;
-    --surface-hover: #f4f4f6;
-    --text: #18181b;
-    --muted: #6b7280;
-    --faint: #9ca3af;
-    --line: #e6e6ea;
-    --line-strong: #cfcfd6;
-    --accent: #5e6ad2;
-    --accent-soft: #eef0ff;
-    --danger: #c0392b;
-    --success: #2e7d5b;
-    --glow: rgba(94, 106, 210, 0.09);
-    --shadow: 0 1px 2px rgba(24, 24, 27, 0.04), 0 12px 32px -20px rgba(24, 24, 27, 0.18);
+    --surface-hover: rgba(0, 0, 0, 0.045);
+    --text: #1d1d1f;
+    --muted: #6e6e73;
+    --faint: #86868b;
+    --line: rgba(0, 0, 0, 0.09);
+    --line-strong: rgba(0, 0, 0, 0.17);
+    --accent: #0071e3;
+    --accent-hover: #0077ed;
+    --accent-soft: rgba(0, 113, 227, 0.10);
+    --danger: #d70015;
+    --success: #248a3d;
+    --glow: rgba(0, 113, 227, 0.08);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 12px 30px -12px rgba(0, 0, 0, 0.12);
+    --window-shadow: 0 0 0 1px rgba(0, 0, 0, 0.06), 0 24px 64px -24px rgba(0, 0, 0, 0.16), 0 4px 16px -4px rgba(0, 0, 0, 0.06);
   }
 
   .dark {
     color-scheme: dark;
-    --bg: #0c0c11;
-    --surface: #14141a;
-    --surface-hover: #1c1c25;
-    --text: #ededf1;
-    --muted: #9b9ba8;
-    --faint: #71717d;
-    --line: #25252e;
-    --line-strong: #383842;
-    --accent: #9aa3f5;
-    --accent-soft: #1f2242;
-    --danger: #f87171;
-    --success: #4ade80;
-    --glow: rgba(139, 148, 232, 0.11);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 16px 40px -24px rgba(0, 0, 0, 0.7);
+    --bg: #161618;
+    --sidebar: rgba(28, 28, 32, 0.84);
+    --surface: #1e1e22;
+    --surface-hover: rgba(255, 255, 255, 0.07);
+    --text: #f5f5f7;
+    --muted: #a1a1a6;
+    --faint: #7c7c82;
+    --line: rgba(255, 255, 255, 0.10);
+    --line-strong: rgba(255, 255, 255, 0.20);
+    --accent: #2997ff;
+    --accent-hover: #47a6ff;
+    --accent-soft: rgba(41, 151, 255, 0.16);
+    --danger: #ff453a;
+    --success: #30d158;
+    --glow: rgba(41, 151, 255, 0.11);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 16px 40px -18px rgba(0, 0, 0, 0.72);
+    --window-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 28px 72px -24px rgba(0, 0, 0, 0.8), 0 6px 20px -6px rgba(0, 0, 0, 0.5);
   }
 
   html {
@@ -88,7 +97,10 @@
   body {
     margin: 0;
     min-height: 100dvh;
-    background: radial-gradient(1100px 460px at 50% -12%, var(--glow), transparent 70%), var(--bg);
+    background:
+      radial-gradient(960px 440px at 18% -10%, var(--glow), transparent 68%),
+      radial-gradient(880px 420px at 85% -12%, var(--glow), transparent 72%),
+      var(--bg);
     background-attachment: fixed;
     color: var(--text);
     font-family: var(--font-sans);
@@ -99,7 +111,8 @@
   }
 
   button,
-  input {
+  input,
+  textarea {
     font: inherit;
   }
 
@@ -125,7 +138,6 @@
   }
 }
 
-/* Thành phần dùng chung — không sinh utility Tailwind */
 .touch-target {
   min-width: 44px;
   min-height: 44px;
@@ -147,36 +159,72 @@
   border-width: 1px;
 }
 
+.mac-window {
+  background: var(--surface);
+}
+
+@media (min-width: 768px) {
+  .mac-window {
+    border-radius: var(--radius-window);
+    box-shadow: var(--window-shadow);
+  }
+}
+
+.mac-sidebar {
+  background: var(--sidebar);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+}
+
+.kbd-cap {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+  padding: 2px 6px;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--muted);
+  box-shadow: 0 1px 0 var(--line);
+}
+
 .btn-primary {
   display: inline-flex;
   min-height: 44px;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 1px solid var(--text);
-  border-radius: var(--radius-control);
-  background: var(--text);
-  padding: 0 20px;
-  color: var(--bg);
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  background: var(--accent);
+  padding: 0 22px;
+  color: #ffffff;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.01em;
   cursor: pointer;
-  transition: opacity 120ms var(--ease-out), transform 120ms var(--ease-out), background 120ms var(--ease-out);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 4px 12px -4px rgba(0, 113, 227, 0.45);
+  transition: background 140ms var(--ease-out), transform 120ms var(--ease-out), box-shadow 140ms var(--ease-out), opacity 120ms var(--ease-out);
 }
 
 .btn-primary:hover:not(:disabled) {
-  opacity: 0.86;
-  transform: translateY(-1px);
+  background: var(--accent-hover);
+  transform: translateY(-0.5px);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.985);
 }
 
 .btn-primary:disabled {
+  background: var(--surface-hover);
   border-color: var(--line);
-  background: var(--line);
   color: var(--faint);
+  box-shadow: none;
   cursor: not-allowed;
   transform: none;
-  opacity: 1;
 }
 
 .btn-ghost {
@@ -187,11 +235,12 @@
   border: 0;
   border-radius: var(--radius-control);
   background: transparent;
-  padding: 0 8px;
+  padding: 0 10px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 12.5px;
+  font-weight: 500;
   cursor: pointer;
-  transition: color 120ms var(--ease-out), background 120ms var(--ease-out);
+  transition: color 140ms var(--ease-out), background 140ms var(--ease-out);
 }
 
 .btn-ghost:hover:not(:disabled) {

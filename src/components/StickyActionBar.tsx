@@ -15,8 +15,8 @@ export function StickyActionBar({ summary, label, onAction, disabled = false, bu
   const reduce = useReducedMotion()
 
   return (
-    <div className="soft-shadow fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:static md:inset-auto md:mt-0 md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none">
-      <div className="mx-auto w-full max-w-3xl px-4 py-3 sm:px-8 md:px-0 md:py-0">
+    <div className="soft-shadow fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-2xl backdrop-saturate-150 md:static md:inset-auto md:mt-6 md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none">
+      <div className="mx-auto w-full max-w-3xl px-4 py-3 sm:px-6 md:max-w-none md:px-0 md:py-0">
         <div className="relative flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:border-t md:border-line md:pt-4">
           {busy && (
             <m.div
@@ -27,8 +27,8 @@ export function StickyActionBar({ summary, label, onAction, disabled = false, bu
               className="absolute inset-x-0 top-0 h-0.5 rounded-full bg-accent"
             />
           )}
-          <p className="text-[11px] tabular text-muted">{summary}</p>
-          <div className="flex items-center gap-3">
+          <p className="text-[12px] tabular text-muted">{summary}</p>
+          <div className="flex items-center gap-2.5">
             {secondary && (
               <button type="button" onClick={secondary.onClick} disabled={busy} className="btn-ghost shrink-0">
                 {secondary.label}
@@ -48,7 +48,9 @@ export function StickyActionBar({ summary, label, onAction, disabled = false, bu
               )}
               {busy ? 'Đang xử lý…' : label}
             </button>
-            <span className="hidden shrink-0 text-[10px] text-faint md:inline">⌘ / Ctrl + Enter</span>
+            <kbd className="kbd-cap hidden shrink-0 md:inline-flex" title="Phím tắt xuất nhanh">
+              ⌘ ↵
+            </kbd>
           </div>
           {extra}
         </div>
