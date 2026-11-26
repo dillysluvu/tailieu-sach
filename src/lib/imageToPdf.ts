@@ -1,3 +1,5 @@
+export type ImagePdfQuality = 'original' | 'balanced' | 'compact'
+
 export type ImageItem = {
   id: string
   file: File
@@ -6,6 +8,11 @@ export type ImageItem = {
   type: 'jpeg' | 'png'
   width: number
   height: number
+}
+
+const IMAGE_QUALITY_PRESETS: Record<Exclude<ImagePdfQuality, 'original'>, { maxEdge: number; jpegQuality: number }> = {
+  balanced: { maxEdge: 2200, jpegQuality: 0.8 },
+  compact: { maxEdge: 1400, jpegQuality: 0.6 },
 }
 
 async function normalizeImage(file: File): Promise<{ bytes: Uint8Array; type: 'jpeg' | 'png'; width: number; height: number }> {
@@ -20,8 +27,6 @@ async function normalizeImage(file: File): Promise<{ bytes: Uint8Array; type: 'j
     const height = bitmap.height
 
     if (isPng || isJpeg) {
-      // Nếu là ảnh JPEG chụp từ điện thoại, vẽ lại qua canvas nếu cần giữ đúng chiều hiển thị EXIF
-      // Với PNG/JPG thường, giữ nguyên bytes gốc để không mất chất lượng.
       const bytes = new Uint8Array(await file.arrayBuffer())
       return { bytes, type: isPng ? 'png' : 'jpeg', width, height }
     }
@@ -30,25 +35,63 @@ async function normalizeImage(file: File): Promise<{ bytes: Uint8Array; type: 'j
     const canvas = document.createElement('canvas')
     canvas.width = width
     canvas.height = height
-    const ctx = canvas.getContext('2d')
-    if (!ctx) throw new Error('Không thể xử lý ảnh này trên trình duyệt.')
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, width, height)
-    ctx.drawImage(bitmap, 0, 0)
-    const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(
-        (result) => (result ? resolve(result) : reject(new Error('Không thể chuyển định dạng ảnh.'))),
-        'image/jpeg',
-        0.92,
-      )
-    })
-    return {
-      bytes: new Uint8Array(await blob.arrayBuffer()),
-      type: 'jpeg',
-      width,
-      height,
+    try {
+      const ctx = canvas.getContext('2d')
+      if (!ctx) throw new Error('Không thể xử lý ảnh này trên trình duyệt.')
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, width, height)
+      ctx.drawImage(bitmap, 0, 0)
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob(
+          (result) => (result ? resolve(result) : reject(new Error('Không thể chuyển định dạng ảnh.'))),
+          'image/jpeg',
+          0.92,
+        )
+      })
+      return {
+        bytes: new Uint8Array(await blob.arrayBuffer()),
+        type: 'jpeg',
+        width,
+        height,
+      }
+    } finally {
+      canvas.width = 0
+      canvas.height = 0
     }
   } finally {
+    bitmap.close()
+  }
+}
+
+async function recompressImageToJpeg(
+  file: File,
+  preset: { maxEdge: number; jpegQuality: number },
+): Promise<Uint8Array> {
+  const bitmap = await createImageBitmap(file)
+  const canvas = document.createElement('canvas')
+  try {
+    const longest = Math.max(bitmap.width, bitmap.height)
+    const ratio = longest > preset.maxEdge ? preset.maxEdge / longest : 1
+    canvas.width = Math.max(1, Math.round(bitmap.width * ratio))
+    canvas.height = Math.max(1, Math.round(bitmap.height * ratio))
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('Không thể nén ảnh trên trình duyệt.')
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (result) => (result ? resolve(result) : reject(new Error('Không thể nén định dạng ảnh.'))),
+        'image/jpeg',
+        preset.jpegQuality,
+      )
+    })
+    return new Uint8Array(await blob.arrayBuffer())
+  } finally {
+    canvas.width = 0
+    canvas.height = 0
     bitmap.close()
   }
 }
@@ -63,14 +106,20 @@ export async function readImage(file: File): Promise<ImageItem> {
   }
 }
 
-export async function imagesToPdf(items: ImageItem[]): Promise<Uint8Array> {
+export async function imagesToPdf(items: ImageItem[], quality: ImagePdfQuality = 'original'): Promise<Uint8Array> {
   if (!items.length) throw new Error('Hãy chọn ít nhất một ảnh.')
   const { PDFDocument } = await import('pdf-lib')
   const output = await PDFDocument.create()
   const margin = 28
 
   for (const item of items) {
-    const image = item.type === 'png' ? await output.embedPng(item.bytes) : await output.embedJpg(item.bytes)
+    const image =
+      quality === 'original'
+        ? item.type === 'png'
+          ? await output.embedPng(item.bytes)
+          : await output.embedJpg(item.bytes)
+        : await output.embedJpg(await recompressImageToJpeg(item.file, IMAGE_QUALITY_PRESETS[quality]))
+
     const landscape = image.width >= image.height
     const page = output.addPage(landscape ? [842, 595] : [595, 842])
     const scale = Math.min(

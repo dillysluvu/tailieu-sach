@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PDFDocument } from 'pdf-lib'
 import { useAsyncTask } from '../hooks/useAsyncTask'
 import type { ExportRef } from '../hooks/useExportShortcut'
+import { splitPdfUnderSizeLimit } from '../lib/compressPdf'
 import { downloadBytes } from '../lib/download'
 import { isPdfFile, LIMITS, sizeError } from '../lib/errors'
 import { loadPdf } from '../lib/pdf'
@@ -21,9 +22,12 @@ type Props = {
 
 const MODES: Array<{ value: SplitMode; label: string; desc: string }> = [
   { value: 'fixed', label: 'Chia đều theo số trang', desc: 'Ví dụ: cứ 4 trang thành 1 đề' },
-  { value: 'custom', label: 'Tự chọn từng phần', desc: 'Ví dụ: 1-4, 5-8, 9-12' },
+  { value: 'custom', label: 'Tự chọn từng phần', desc: 'Hỗ trợ 1-4, 5-cuối, lẻ, chẵn' },
   { value: 'every', label: 'Mỗi trang 1 file', desc: 'Tách rời từng trang riêng biệt' },
+  { value: 'size', label: 'Theo dung lượng (MB)', desc: 'Cắt tự động vừa mốc gửi Zalo / nộp cổng' },
 ]
+
+const SIZE_PRESETS = [2, 5, 10, 20]
 
 export function SplitPdfPanel({ incoming, onFiles, active, exportRef }: Props) {
   const [file, setFile] = useState<File | null>(null)
@@ -31,6 +35,7 @@ export function SplitPdfPanel({ incoming, onFiles, active, exportRef }: Props) {
   const [mode, setMode] = useState<SplitMode>('fixed')
   const [pagesPerPart, setPagesPerPart] = useState(2)
   const [customInput, setCustomInput] = useState('')
+  const [maxMbInput, setMaxMbInput] = useState('5')
   const [baseName, setBaseName] = useState('')
   const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
@@ -56,7 +61,7 @@ export function SplitPdfPanel({ incoming, onFiles, active, exportRef }: Props) {
     setPreviewOpen(false)
     setBaseName(pdfs[0].name.replace(/\.pdf$/i, ''))
     setPagesPerPart(Math.min(Math.max(1, Math.ceil(pages / 2)), pages))
-    setCustomInput(pages >= 4 ? `1-${Math.floor(pages / 2)}, ${Math.floor(pages / 2) + 1}-${pages}` : `1-${pages}`)
+    setCustomInput(pages >= 4 ? `1-${Math.floor(pages / 2)}, ${Math.floor(pages / 2) + 1}-cuối` : `1-${pages}`)
   }, [])
 
   useEffect(() => {
@@ -66,8 +71,16 @@ export function SplitPdfPanel({ incoming, onFiles, active, exportRef }: Props) {
     }
   }, [incoming, acceptFiles, run])
 
+  const parsedMb = Number(maxMbInput.replace(',', '.'))
+
   const { parts, error } = useMemo(() => {
     if (!pageCount) return { parts: [], error: null as string | null }
+    if (mode === 'size') {
+      if (!Number.isFinite(parsedMb) || parsedMb < 0.2) {
+        return { parts: [], error: 'Nhập dung lượng tối đa từ 0.2 MB trở lên.' }
+      }
+      return { parts: [], error: null }
+    }
     if (mode === 'every') {
       return { parts: buildFixedParts(pageCount, 1), error: null }
     }
@@ -81,15 +94,33 @@ export function SplitPdfPanel({ incoming, onFiles, active, exportRef }: Props) {
       return { parts: buildFixedParts(pageCount, pagesPerPart), error: null }
     }
     return parseCustomParts(customInput, pageCount)
-  }, [customInput, mode, pageCount, pagesPerPart])
+  }, [customInput, mode, pageCount, pagesPerPart, parsedMb])
 
   const busy = status === 'running'
   const stem = baseName.trim() || file?.name.replace(/\.pdf$/i, '') || 'tach-pdf'
 
   const handleSplit = useCallback(() => {
     void run(async () => {
-      if (!docRef.current || !file) throw new Error('Hãy chọn file PDF trước.')
-      if (error || !parts.length) throw new Error(error || 'Chưa có phần nào hợp lệ để tách.')
+      if (!docRef.current || !file || !previewBytes) throw new Error('Hãy chọn file PDF trước.')
+      if (error) throw new Error(error)
+
+      if (mode === 'size') {
+        const limitBytes = Math.round(parsedMb * 1_000_000)
+        const result = await splitPdfUnderSizeLimit(previewBytes, limitBytes, stem, setMessage)
+        if (!result) {
+          throw new Error(
+            `Có ít nhất 1 trang đơn đã vượt quá ${parsedMb} MB — hãy thử nén PDF trước ở tab Nén PDF.`,
+          )
+        }
+        downloadBytes(
+          result.bytes,
+          result.filename,
+          result.kind === 'zip' ? 'application/zip' : 'application/pdf',
+        )
+        return
+      }
+
+      if (!parts.length) throw new Error('Chưa có phần nào hợp lệ để tách.')
       const result = await splitPdfToArchive(docRef.current, parts, stem, (current, total) => {
         setMessage(`Đang tách phần ${current} / ${total}…`)
       })
@@ -98,8 +129,8 @@ export function SplitPdfPanel({ incoming, onFiles, active, exportRef }: Props) {
         result.filename,
         result.kind === 'zip' ? 'application/zip' : 'application/pdf',
       )
-    }, parts.length > 1 ? `Đã tách thành ${parts.length} file và tải về (.zip).` : 'Đã tách và tải file PDF.')
-  }, [error, file, parts, run, setMessage, stem])
+    }, mode === 'size' ? `Đã cắt xong các phần ≤ ${parsedMb} MB.` : parts.length > 1 ? `Đã tách thành ${parts.length} file và tải về (.zip).` : 'Đã tách và tải file PDF.')
+  }, [error, file, mode, parsedMb, parts, previewBytes, run, setMessage, stem])
 
   useEffect(() => {
     if (!active) return
@@ -158,7 +189,7 @@ export function SplitPdfPanel({ incoming, onFiles, active, exportRef }: Props) {
           <div className="mt-5 space-y-4">
             <div>
               <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.1em] text-faint">Cách tách file</p>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3" role="radiogroup" aria-label="Cách tách file">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Cách tách file">
                 {MODES.map((option) => {
                   const selected = mode === option.value
                   return (
@@ -214,22 +245,62 @@ export function SplitPdfPanel({ incoming, onFiles, active, exportRef }: Props) {
                   type="text"
                   value={customInput}
                   onChange={(event) => setCustomInput(event.target.value)}
-                  placeholder="Ví dụ: 1-4, 5-8, 9-12"
+                  placeholder="Ví dụ: 1-4, 5-cuối hoặc lẻ, chẵn"
                   spellCheck={false}
                   className="h-11 w-full rounded-control border border-line bg-surface px-3 text-base text-text outline-none placeholder:text-faint focus:border-accent focus:ring-2 focus:ring-accent-soft sm:text-[13px]"
                 />
               </label>
             )}
 
+            {mode === 'size' && (
+              <div className="space-y-2">
+                <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-faint">
+                  Giới hạn tối đa mỗi file con (MB)
+                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  {SIZE_PRESETS.map((mb) => {
+                    const selected = parsedMb === mb
+                    return (
+                      <button
+                        key={mb}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => setMaxMbInput(String(mb))}
+                        className={`min-h-11 rounded-control border px-3 text-[12px] tabular transition-colors duration-150 ${
+                          selected
+                            ? 'border-accent bg-accent-soft font-semibold text-accent'
+                            : 'border-line bg-surface text-muted hover:border-line-strong hover:text-text'
+                        }`}
+                      >
+                        {mb} MB
+                      </button>
+                    )
+                  })}
+                  <div className="flex h-11 items-center rounded-control border border-line bg-surface px-3 focus-within:border-accent focus-within:ring-2 focus-within:ring-accent-soft">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      aria-label="Dung lượng tối đa mỗi file (MB)"
+                      value={maxMbInput}
+                      onChange={(event) => setMaxMbInput(event.target.value)}
+                      className="h-11 w-16 bg-transparent text-center text-base tabular text-text outline-none sm:text-sm"
+                    />
+                    <span className="ml-1 text-[11px] text-faint">MB</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {error ? (
               <p className="text-xs text-danger">{error}</p>
             ) : (
+              mode !== 'size' &&
               parts.length > 0 && (
                 <div className="rounded-card border border-line bg-surface/60 px-3.5 py-2.5 text-xs text-muted">
                   <span className="font-medium text-text">Dự kiến xuất {parts.length} file: </span>
                   {parts.slice(0, 6).map((part, idx) => (
-                    <span key={`${part.label}-${idx}`} className="inline-block mr-2 tabular">
-                      #{idx + 1} (tr.{part.from === part.to ? part.from : `${part.from}–${part.to}`})
+                    <span key={`${part.label}-${idx}`} className="mr-2 inline-block tabular">
+                      #{idx + 1} (tr.{part.summary})
                     </span>
                   ))}
                   {parts.length > 6 && <span>… và {parts.length - 6} file nữa</span>}
@@ -249,22 +320,30 @@ export function SplitPdfPanel({ incoming, onFiles, active, exportRef }: Props) {
                   spellCheck={false}
                   className="min-h-11 min-w-0 flex-1 bg-transparent text-[13px] text-text outline-none placeholder:text-faint"
                 />
-                <span className="ml-2 shrink-0 text-[11px] text-faint">.{parts.length > 1 ? 'zip' : 'pdf'}</span>
+                <span className="ml-2 shrink-0 text-[11px] text-faint">
+                  .{mode === 'size' || parts.length > 1 ? 'zip' : 'pdf'}
+                </span>
               </div>
             </label>
           </div>
 
           <StickyActionBar
             busy={busy}
-            disabled={!!error || parts.length === 0}
-            label={parts.length > 1 ? 'Tách & tải ZIP' : 'Tải file PDF'}
+            disabled={!!error || (mode !== 'size' && parts.length === 0)}
+            label={mode === 'size' ? 'Cắt theo dung lượng' : parts.length > 1 ? 'Tách & tải ZIP' : 'Tải file PDF'}
             onAction={handleSplit}
             secondary={{ label: 'Xem trang', onClick: () => setPreviewOpen(true) }}
             summary={
-              <>
-                Tách thành <span className="font-semibold text-text">{parts.length}</span> file từ{' '}
-                <span className="font-semibold text-text">{pageCount}</span> trang
-              </>
+              mode === 'size' ? (
+                <>
+                  Chia tự động mỗi file ≤ <span className="font-semibold text-text">{Number.isFinite(parsedMb) ? parsedMb : '?'} MB</span>
+                </>
+              ) : (
+                <>
+                  Tách thành <span className="font-semibold text-text">{parts.length}</span> file từ{' '}
+                  <span className="font-semibold text-text">{pageCount}</span> trang
+                </>
+              )
             }
           />
         </>

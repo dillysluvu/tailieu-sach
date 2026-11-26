@@ -54,7 +54,7 @@ try {
 
   check('title', (await page.title()).includes('PDF'))
   check('og image', (await page.locator('meta[property="og:image"]').getAttribute('content')).includes('og-image.png'))
-  check('tab count', (await page.getByRole('tab').count()) === 6)
+  check('tab count', (await page.getByRole('tab').count()) === 8)
   check('higher limit chip', await page.getByText('500 MB').first().isVisible())
 
   // Theme toggle + persistence
@@ -92,6 +92,16 @@ try {
   ])
   await download.saveAs(join(output, 'merge.pdf'))
   check('Ctrl+Enter exports 6 pages', (await pagesOf(join(output, 'merge.pdf'))) === 6)
+
+  // Duplex interleave merge (2 rows)
+  await page.locator('#panel-pdf').getByRole('button', { name: /Ghép xen kẽ 2 mặt/ }).click()
+  const [interleaveDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Xuất PDF' }).click(),
+  ])
+  await interleaveDownload.saveAs(join(output, 'interleave.pdf'))
+  check('duplex interleave exports 6 pages', (await pagesOf(join(output, 'interleave.pdf'))) === 6)
+  await page.locator('#panel-pdf').getByRole('button', { name: /Ghép xen kẽ 2 mặt/ }).click()
 
   // On-demand preview
   await page.getByRole('button', { name: 'Xem trước' }).click()
@@ -145,6 +155,107 @@ try {
   await splitDownload.saveAs(splitZipPath)
   const splitEntries = Object.keys(unzipSync(new Uint8Array(readFileSync(splitZipPath))))
   check('split pdf exports zip with 6 pdfs', splitEntries.length === 6, splitEntries.join(', '))
+
+  await page.locator('#panel-split').getByRole('radio', { name: /Tự chọn từng phần/ }).click()
+  await page.locator('#panel-split').getByPlaceholder(/Ví dụ:/).fill('1-2, 3-cuối')
+  const [splitCustomDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#panel-split').getByRole('button', { name: 'Tách & tải ZIP' }).click(),
+  ])
+  const splitCustomZipPath = join(output, 'split-custom.zip')
+  await splitCustomDownload.saveAs(splitCustomZipPath)
+  const splitCustomEntries = Object.keys(unzipSync(new Uint8Array(readFileSync(splitCustomZipPath))))
+  check('split pdf supports Vietnamese syntax 3-cuối', splitCustomEntries.length === 2, splitCustomEntries.join(', '))
+
+  await page.locator('#panel-split').getByRole('radio', { name: /Theo dung lượng/ }).click()
+  const [splitSizeDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#panel-split').getByRole('button', { name: 'Cắt theo dung lượng' }).click(),
+  ])
+  await splitSizeDownload.saveAs(join(output, 'split-size.pdf'))
+  check('split pdf by MB limit exports 6 pages', (await pagesOf(join(output, 'split-size.pdf'))) === 6)
+
+  // ---------- Compress PDF ----------
+  await page.getByRole('tab', { name: /Nén PDF/ }).click()
+  await page.locator('#panel-compress input[type=file]').first().setInputFiles(fixture('a.pdf'))
+  await page.locator('#panel-compress').getByRole('button', { name: 'Nén PDF' }).waitFor({ timeout: 20000 })
+  const [compressDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#panel-compress').getByRole('button', { name: 'Nén PDF' }).click(),
+  ])
+  await compressDownload.saveAs(join(output, 'compressed.pdf'))
+  check('compress pdf exports 6 pages', (await pagesOf(join(output, 'compressed.pdf'))) === 6)
+  check('compress pdf shows size summary', await page.locator('#panel-compress').getByText(/(B|KB|MB) →/).isVisible())
+
+  // ---------- Edit PDF ----------
+  await page.getByRole('tab', { name: /Chỉnh trang/ }).click()
+  await page.locator('#panel-edit input[type=file]').first().setInputFiles(fixture('a.pdf'))
+  await page.locator('#panel-edit').getByRole('button', { name: 'Xoay & Tải PDF' }).waitFor({ timeout: 20000 })
+  const [rotateDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#panel-edit').getByRole('button', { name: 'Xoay & Tải PDF' }).click(),
+  ])
+  await rotateDownload.saveAs(join(output, 'rotated.pdf'))
+  check('edit pdf rotate exports 6 pages', (await pagesOf(join(output, 'rotated.pdf'))) === 6)
+
+  await page.locator('#panel-edit').getByRole('radio', { name: 'Đánh số trang' }).click()
+  const [numDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#panel-edit').getByRole('button', { name: 'Đánh số & Tải PDF' }).click(),
+  ])
+  await numDownload.saveAs(join(output, 'numbered.pdf'))
+  check('edit pdf page numbers exports 6 pages', (await pagesOf(join(output, 'numbered.pdf'))) === 6)
+
+  await page.locator('#panel-edit').getByRole('radio', { name: 'Đóng dấu mờ' }).click()
+  const [wmDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#panel-edit').getByRole('button', { name: 'Đóng dấu & Tải PDF' }).click(),
+  ])
+  await wmDownload.saveAs(join(output, 'watermarked.pdf'))
+  check('edit pdf Vietnamese watermark exports 6 pages', (await pagesOf(join(output, 'watermarked.pdf'))) === 6)
+
+  await page.locator('#panel-edit').getByRole('radio', { name: 'In gộp trang' }).click()
+  const [nupDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#panel-edit').getByRole('button', { name: /In gộp 2 trang/ }).click(),
+  ])
+  await nupDownload.saveAs(join(output, 'nup.pdf'))
+  check('edit pdf 2-up exports 3 sheets', (await pagesOf(join(output, 'nup.pdf'))) === 3)
+
+  await page.locator('#panel-edit').getByRole('radio', { name: 'Sắp xếp & Xóa' }).click()
+  await page.locator('#panel-edit').getByRole('button', { name: 'Đảo ngược thứ tự' }).click()
+  await page.locator('#panel-edit').getByRole('button', { name: '+ Chèn trang trắng' }).click()
+  const [orgDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#panel-edit').getByRole('button', { name: 'Xuất 7 trang' }).click(),
+  ])
+  await orgDownload.saveAs(join(output, 'organized.pdf'))
+  check('edit pdf organize (reverse + blank page) exports 7 pages', (await pagesOf(join(output, 'organized.pdf'))) === 7)
+
+  await page.locator('#panel-edit').getByRole('radio', { name: 'Chuẩn hóa A4/A5' }).click()
+  const [stdDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#panel-edit').getByRole('button', { name: /Chuẩn hóa A4/ }).click(),
+  ])
+  await stdDownload.saveAs(join(output, 'a4.pdf'))
+  check('edit pdf standardize A4 exports 6 pages', (await pagesOf(join(output, 'a4.pdf'))) === 6)
+
+  await page.locator('#panel-edit').getByRole('radio', { name: 'Cắt lề' }).click()
+  await page.locator('#panel-edit').getByRole('button', { name: 'Viền scan 8 mm' }).click()
+  const [cropDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#panel-edit').getByRole('button', { name: 'Cắt lề & Tải PDF' }).click(),
+  ])
+  await cropDownload.saveAs(join(output, 'cropped.pdf'))
+  check('edit pdf crop margins exports 6 pages', (await pagesOf(join(output, 'cropped.pdf'))) === 6)
+
+  await page.locator('#panel-edit').getByRole('radio', { name: 'Thông tin ẩn' }).click()
+  const [metaDownload] = await Promise.all([
+    page.waitForEvent('download'),
+    page.locator('#panel-edit').getByRole('button', { name: 'Xóa thông tin ẩn & Tải PDF' }).click(),
+  ])
+  await metaDownload.saveAs(join(output, 'cleaned-meta.pdf'))
+  check('edit pdf clean metadata exports 6 pages', (await pagesOf(join(output, 'cleaned-meta.pdf'))) === 6)
 
   // ---------- PDF -> Images (.zip) ----------
   await page.getByRole('tab', { name: /PDF → Ảnh/ }).click()
@@ -206,12 +317,13 @@ try {
   await page.waitForFunction(() => document.querySelectorAll('#panel-image li').length === 2, null, { timeout: 20000 })
   check('image rows', (await page.locator('#panel-image li').count()) === 2)
 
+  await page.locator('#panel-image').getByRole('radio', { name: /Cân bằng/ }).click()
   const [imageDownload] = await Promise.all([
     page.waitForEvent('download'),
     page.getByRole('button', { name: 'Tạo PDF' }).click(),
   ])
   await imageDownload.saveAs(join(output, 'images.pdf'))
-  check('images export 2 pages', (await pagesOf(join(output, 'images.pdf'))) === 2)
+  check('images export 2 pages (balanced quality)', (await pagesOf(join(output, 'images.pdf'))) === 2)
 
   await page.locator('#panel-image').getByRole('button', { name: 'Trang chẵn' }).click()
   const [imageEven] = await Promise.all([

@@ -1,12 +1,12 @@
 import type { PDFDocument } from 'pdf-lib'
-import { pageIndices } from './parse'
+import { formatPageNumbersShort, normalizeRangeInput, parsePageSelection } from './pageRange'
 
-export type SplitMode = 'every' | 'fixed' | 'custom'
+export type SplitMode = 'every' | 'fixed' | 'custom' | 'size'
 
 export type SplitPart = {
   label: string
-  from: number
-  to: number
+  pages: number[]
+  summary: string
 }
 
 export function buildFixedParts(pageCount: number, pagesPerPart: number): SplitPart[] {
@@ -15,10 +15,11 @@ export function buildFixedParts(pageCount: number, pagesPerPart: number): SplitP
   let index = 1
   for (let start = 1; start <= pageCount; start += step) {
     const end = Math.min(pageCount, start + step - 1)
+    const pages = Array.from({ length: end - start + 1 }, (_, i) => start + i)
     parts.push({
       label: start === end ? `trang-${String(start).padStart(2, '0')}` : `phan-${String(index).padStart(2, '0')}-tr${start}-${end}`,
-      from: start,
-      to: end,
+      pages,
+      summary: start === end ? `${start}` : `${start}–${end}`,
     })
     index += 1
   }
@@ -26,34 +27,35 @@ export function buildFixedParts(pageCount: number, pagesPerPart: number): SplitP
 }
 
 export function parseCustomParts(input: string, pageCount: number): { parts: SplitPart[]; error: string | null } {
-  const raw = input
-    .split(/[,;\n]+/)
-    .map((chunk) => chunk.trim())
-    .filter(Boolean)
-
-  if (!raw.length) {
-    return { parts: [], error: 'Hãy nhập khoảng trang, ví dụ: 1-4, 5-8, 9-12' }
+  const normalized = normalizeRangeInput(input)
+  if (!normalized) {
+    return { parts: [], error: 'Hãy nhập khoảng trang, ví dụ: 1-4, 5-cuối hoặc lẻ, chẵn' }
   }
 
+  const raw = normalized.split(',').filter(Boolean)
   const parts: SplitPart[] = []
+
   for (let i = 0; i < raw.length; i += 1) {
     const token = raw[i]
-    const match = /^(\d+)(?:\s*[-–]\s*(\d+))?$/.exec(token)
-    if (!match) {
-      return { parts: [], error: `Khoảng "${token}" không hợp lệ. Dùng dạng 1-4 hoặc 5.` }
+    const parsed = parsePageSelection(token, pageCount)
+    if (parsed.error || !parsed.pages.length) {
+      return { parts: [], error: parsed.error ?? `Khoảng "${token}" không hợp lệ.` }
     }
-    const from = Number(match[1])
-    const to = match[2] ? Number(match[2]) : from
-    if (from < 1 || to < 1 || from > pageCount || to > pageCount) {
-      return { parts: [], error: `Khoảng "${token}" nằm ngoài số trang (1–${pageCount}).` }
-    }
-    if (from > to) {
-      return { parts: [], error: `Khoảng "${token}": trang bắt đầu phải nhỏ hơn hoặc bằng trang cuối.` }
-    }
+    const pages = parsed.pages
+    const summary = formatPageNumbersShort(pages)
+    const labelSuffix =
+      token === 'odd'
+        ? 'trang-le'
+        : token === 'even'
+          ? 'trang-chan'
+          : pages.length === 1
+            ? `tr${pages[0]}`
+            : `tr${pages[0]}-${pages[pages.length - 1]}`
+
     parts.push({
-      label: from === to ? `phan-${String(i + 1).padStart(2, '0')}-tr${from}` : `phan-${String(i + 1).padStart(2, '0')}-tr${from}-${to}`,
-      from,
-      to,
+      label: `phan-${String(i + 1).padStart(2, '0')}-${labelSuffix}`,
+      pages,
+      summary,
     })
   }
 
@@ -78,7 +80,10 @@ export async function splitPdfToArchive(
   if (parts.length === 1) {
     onProgress?.(1, 1)
     const out = await PDFDocument.create()
-    const copied = await out.copyPages(source, pageIndices(parts[0].from, parts[0].to))
+    const copied = await out.copyPages(
+      source,
+      parts[0].pages.map((p) => p - 1),
+    )
     copied.forEach((page) => out.addPage(page))
     const bytes = await out.save()
     return { kind: 'pdf', bytes, filename: `${safeStem}-${parts[0].label}.pdf`, count: 1 }
@@ -91,7 +96,10 @@ export async function splitPdfToArchive(
     const part = parts[index]
     onProgress?.(index + 1, parts.length)
     const out = await PDFDocument.create()
-    const copied = await out.copyPages(source, pageIndices(part.from, part.to))
+    const copied = await out.copyPages(
+      source,
+      part.pages.map((p) => p - 1),
+    )
     copied.forEach((page) => out.addPage(page))
     entries[`${safeStem}-${part.label}.pdf`] = await out.save()
   }

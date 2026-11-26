@@ -32,6 +32,8 @@ export function PdfMergerPanel({ incoming, onFiles, active, exportRef }: Props) 
   const [previewOpen, setPreviewOpen] = useState(false)
   const [filename, setFilename] = useState('')
   const [preset, setPreset] = useState<PagePreset>('all')
+  const [interleave, setInterleave] = useState(false)
+  const [reverseSecond, setReverseSecond] = useState(false)
   const extraInput = useRef<HTMLInputElement>(null)
   const lastToken = useRef(0)
   const outputCache = useRef<{ key: string; bytes: Uint8Array } | null>(null)
@@ -48,15 +50,17 @@ export function PdfMergerPanel({ incoming, onFiles, active, exportRef }: Props) 
   const total = totalPages(outputRows)
   const sourceCount = new Set(rows.map((row) => row.fileId)).size
   const tooMany = total > LIMITS.maxOutputPages
-  const signature = outputRows.map((row) => `${row.id}@${row.from}-${row.to}`).join('|')
+  const canInterleave = rows.length === 2
+  const useInterleave = canInterleave && interleave
+  const signature = `${outputRows.map((row) => `${row.id}@${row.from}-${row.to}`).join('|')}#i:${useInterleave ? 1 : 0}:r:${useInterleave && reverseSecond ? 1 : 0}`
   const name = outputName(filename, 'ket-qua')
 
   const buildOutput = useCallback(async () => {
     if (outputCache.current?.key === signature) return outputCache.current.bytes
-    const bytes = await mergeRows(outputRows, getCache())
+    const bytes = await mergeRows(outputRows, getCache(), useInterleave ? { interleave: true, reverseSecond } : undefined)
     outputCache.current = { key: signature, bytes }
     return bytes
-  }, [getCache, outputRows, signature])
+  }, [getCache, outputRows, reverseSecond, signature, useInterleave])
 
   const validate = useCallback(() => {
     if (!rows.length) throw new Error('Hãy kéo ít nhất một file PDF.')
@@ -169,6 +173,37 @@ export function PdfMergerPanel({ incoming, onFiles, active, exportRef }: Props) 
               </li>
             )}
           </ul>
+
+          {canInterleave && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                aria-pressed={interleave}
+                onClick={() => setInterleave((prev) => !prev)}
+                className={`min-h-11 rounded-control border px-3 text-[12px] transition-colors duration-150 ${
+                  interleave
+                    ? 'border-accent bg-accent-soft font-semibold text-accent'
+                    : 'border-line bg-surface text-muted hover:border-line-strong hover:text-text'
+                }`}
+              >
+                {interleave ? '✓ Đang bật: ' : ''}Ghép xen kẽ 2 mặt (A1, B1, A2, B2…)
+              </button>
+              {interleave && (
+                <button
+                  type="button"
+                  aria-pressed={reverseSecond}
+                  onClick={() => setReverseSecond((prev) => !prev)}
+                  className={`min-h-11 rounded-control border px-3 text-[12px] transition-colors duration-150 ${
+                    reverseSecond
+                      ? 'border-accent bg-accent-soft font-semibold text-accent'
+                      : 'border-line bg-surface text-muted hover:border-line-strong hover:text-text'
+                  }`}
+                >
+                  {reverseSecond ? '✓ Đảo ngược thứ tự file 2' : 'Đảo ngược thứ tự file 2'}
+                </button>
+              )}
+            </div>
+          )}
 
           <ExportOptions filename={filename} onFilename={setFilename} preset={preset} onPreset={setPreset} />
 

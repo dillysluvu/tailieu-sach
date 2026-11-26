@@ -4,7 +4,7 @@ import type { ExportRef } from '../hooks/useExportShortcut'
 import { downloadBytes } from '../lib/download'
 import { isImageFile, LIMITS, sizeError } from '../lib/errors'
 import { filterPages, outputName, type PagePreset } from '../lib/exportOptions'
-import { imagesToPdf, readImage, type ImageItem } from '../lib/imageToPdf'
+import { imagesToPdf, readImage, type ImageItem, type ImagePdfQuality } from '../lib/imageToPdf'
 import type { IncomingFiles } from '../types'
 import { Dropzone } from './Dropzone'
 import { ExportOptions } from './ExportOptions'
@@ -24,6 +24,7 @@ export function ImageToPdfPanel({ incoming, onFiles, active, exportRef }: Props)
   const objectUrls = useRef<Set<string>>(new Set())
   const [filename, setFilename] = useState('')
   const [preset, setPreset] = useState<PagePreset>('all')
+  const [quality, setQuality] = useState<ImagePdfQuality>('original')
   const [previewBytes, setPreviewBytes] = useState<Uint8Array | null>(null)
   const [previewOpen, setPreviewOpen] = useState(false)
   const lastToken = useRef(0)
@@ -67,15 +68,15 @@ export function ImageToPdfPanel({ incoming, onFiles, active, exportRef }: Props)
     () => filterPages(items.map((_, index) => index + 1), preset).map((page) => items[page - 1]),
     [items, preset],
   )
-  const signature = selected.map((item) => item.id).join('|')
+  const signature = `${quality}:${selected.map((item) => item.id).join('|')}`
   const name = outputName(filename, 'hinh-anh')
 
   const buildOutput = useCallback(async () => {
     if (outputCache.current?.key === signature) return outputCache.current.bytes
-    const bytes = await imagesToPdf(selected)
+    const bytes = await imagesToPdf(selected, quality)
     outputCache.current = { key: signature, bytes }
     return bytes
-  }, [selected, signature])
+  }, [quality, selected, signature])
 
   const handleExport = useCallback(() => {
     void run(async () => {
@@ -192,6 +193,37 @@ export function ImageToPdfPanel({ incoming, onFiles, active, exportRef }: Props)
               </li>
             ))}
           </ul>
+
+          <div className="mt-5 border-t border-line pt-4">
+            <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.1em] text-faint">Chất lượng &amp; dung lượng</p>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Chất lượng ảnh">
+              {(
+                [
+                  { value: 'original', label: 'Giữ nguyên gốc' },
+                  { value: 'balanced', label: 'Cân bằng · nhẹ hơn' },
+                  { value: 'compact', label: 'Siêu nhẹ · gửi Zalo' },
+                ] as const
+              ).map((option) => {
+                const selectedOpt = quality === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={selectedOpt}
+                    onClick={() => setQuality(option.value)}
+                    className={`min-h-11 rounded-control border px-3 text-[12px] transition-colors duration-150 ${
+                      selectedOpt
+                        ? 'border-accent bg-accent-soft font-semibold text-accent'
+                        : 'border-line bg-surface text-muted hover:border-line-strong hover:text-text'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
 
           <ExportOptions filename={filename} onFilename={setFilename} preset={preset} onPreset={setPreset} />
 

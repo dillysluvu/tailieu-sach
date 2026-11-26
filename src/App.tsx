@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, m, useReducedMotion } from 'motion/react'
+import { CompressPdfPanel } from './components/CompressPdfPanel'
 import { DragOverlay } from './components/DragOverlay'
+import { EditPdfPanel } from './components/EditPdfPanel'
 import { ImageToPdfPanel } from './components/ImageToPdfPanel'
 import { PdfMergerPanel } from './components/PdfMergerPanel'
 import { PdfToImagesPanel } from './components/PdfToImagesPanel'
@@ -15,7 +17,7 @@ import { useTheme } from './hooks/useTheme'
 import { isDocxFile, isImageFile, isPdfFile } from './lib/errors'
 import type { IncomingFiles, TabKey } from './types'
 
-const PDF_TABS: ReadonlySet<TabKey> = new Set(['pdf', 'split', 'pdf2img', 'pdf2word'])
+const PDF_TABS: ReadonlySet<TabKey> = new Set(['pdf', 'split', 'compress', 'edit', 'pdf2img', 'pdf2word'])
 
 export default function App() {
   const [tab, setTab] = useState<TabKey>('pdf')
@@ -139,6 +141,12 @@ export default function App() {
         </div>
         <div id="panel-split" role="tabpanel" aria-labelledby="tab-split" className={tab === 'split' ? '' : 'hidden'}>
           <SplitPdfPanel incoming={incoming} onFiles={handleFiles} active={tab === 'split'} exportRef={exportRef} />
+        </div>
+        <div id="panel-compress" role="tabpanel" aria-labelledby="tab-compress" className={tab === 'compress' ? '' : 'hidden'}>
+          <CompressPdfPanel incoming={incoming} onFiles={handleFiles} active={tab === 'compress'} exportRef={exportRef} />
+        </div>
+        <div id="panel-edit" role="tabpanel" aria-labelledby="tab-edit" className={tab === 'edit' ? '' : 'hidden'}>
+          <EditPdfPanel incoming={incoming} onFiles={handleFiles} active={tab === 'edit'} exportRef={exportRef} />
         </div>
         <div id="panel-pdf2img" role="tabpanel" aria-labelledby="tab-pdf2img" className={tab === 'pdf2img' ? '' : 'hidden'}>
           <PdfToImagesPanel incoming={incoming} onFiles={handleFiles} active={tab === 'pdf2img'} exportRef={exportRef} />

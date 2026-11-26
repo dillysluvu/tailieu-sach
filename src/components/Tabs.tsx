@@ -22,12 +22,36 @@ const TABS: Array<{ key: TabKey; label: string; hint: string; panel: string; ico
   {
     key: 'split',
     label: 'Tách PDF',
-    hint: 'Chia nhỏ thành nhiều file',
+    hint: 'Theo trang hoặc dung lượng',
     panel: 'panel-split',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-4 w-4 shrink-0">
         <path d="M4 6h7v12H4zM13 6h7v12h-7z" strokeLinejoin="round" />
         <path d="M12 3v18" strokeLinecap="round" strokeDasharray="2 3" />
+      </svg>
+    ),
+  },
+  {
+    key: 'compress',
+    label: 'Nén PDF',
+    hint: 'Giảm MB, vừa mốc gửi Zalo',
+    panel: 'panel-compress',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-4 w-4 shrink-0">
+        <path d="M6 3h8l4 4v14H6z" strokeLinejoin="round" />
+        <path d="M12 9v6m0 0-2.5-2.5M12 15l2.5-2.5M9 18h6" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    key: 'edit',
+    label: 'Chỉnh trang',
+    hint: 'Xoay, đánh số, dấu mờ, in gộp',
+    panel: 'panel-edit',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" className="h-4 w-4 shrink-0">
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <path d="M9 9h6M9 13h4M9 17h6" strokeLinecap="round" />
       </svg>
     ),
   },
@@ -103,7 +127,7 @@ export function Tabs({ active, onChange }: Props) {
     <div
       role="tablist"
       aria-label="Chọn công cụ xử lý tài liệu"
-      className="grid grid-cols-2 gap-2 sm:grid-cols-3"
+      className="grid grid-cols-2 gap-2 sm:grid-cols-4"
     >
       {TABS.map((tab, index) => {
         const selected = active === tab.key
